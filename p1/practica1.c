@@ -29,8 +29,11 @@ y los vuelca a traza (¿correctamente?) nueva con tiempo actual
 pcap_t *descr=NULL,*descr2=NULL;
 pcap_dumper_t *pdumper=NULL;
 
+int contador =0;
+
 void handle(int nsignal){
-	printf("Control C pulsado\n");
+	printf("\nControl C pulsado\n");
+	printf("Paquetes capturados: %d\n", contador);
 	if(descr)
 		pcap_close(descr);
 	if(descr2)
@@ -42,17 +45,27 @@ void handle(int nsignal){
 
 int main(int argc, char **argv)
 {
-	int retorno=0,contador=0;
+
+	int retorno=0;
 	char errbuf[PCAP_ERRBUF_SIZE];
 	uint8_t *paquete=NULL;
 	struct pcap_pkthdr *cabecera=NULL;
 	char file_name[256];
 	struct timeval time;
 
+    if(argc<2){
+        printf("COmands.\n");
+        exit(EXIT_SUCCESS);
+
+        }
+
 	if(signal(SIGINT,handle)==SIG_ERR){
 		printf("Error: Fallo al capturar la senal SIGINT.\n");
 		exit(ERROR);
 	}	
+
+
+    if(argc==2){
 		//Apertura de interface
    	if ((descr = pcap_open_live("eth0",9,0,100, errbuf)) == NULL){
 		printf("Error: pcap_open_live(): %s, %s %d.\n",errbuf,__FILE__,__LINE__);
@@ -75,7 +88,7 @@ int main(int argc, char **argv)
 	}
 
 
-	while (contador<500){
+	while (1){
 		retorno = pcap_next_ex(descr,&cabecera,(const u_char **)&paquete);
 		if(retorno == -1){ 		//En caso de error
 			printf("Error al capturar un paquete %s, %s %d.\n",pcap_geterr(descr),__FILE__,__LINE__);
@@ -93,13 +106,18 @@ int main(int argc, char **argv)
 			//En otro caso
 		contador++;
 		printf("Nuevo paquete capturado a las %s\n",ctime((const time_t*)&(cabecera->ts.tv_sec)));
-		if(pdumper){
+		cabecera->ts.tv_sec+=172800;
+        printf("Nuevo paquete capturado con fecha editada %s\n",ctime((const time_t*)&(cabecera->ts.tv_sec)));
+
+        if(pdumper){
+
 			pcap_dump((uint8_t *)pdumper,cabecera,paquete);
 		}
 	}
 	pcap_close(descr);
 	pcap_close(descr2);
 	pcap_dump_close(pdumper);
+}
 	return OK;
 }
 
