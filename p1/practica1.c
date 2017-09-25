@@ -29,10 +29,12 @@ y los vuelca a traza (¿correctamente?) nueva con tiempo actual
 
 pcap_t *descr=NULL,*descr2=NULL;
 pcap_dumper_t *pdumper=NULL;
+
 int contador =0;
 
 void handle(int nsignal){
-	printf("Control C pulsado\n");
+	printf("\nControl C pulsado\n");
+	printf("Paquetes capturados: %d\n", contador);
 	if(descr)
 		pcap_close(descr);
 	if(descr2)
@@ -44,6 +46,7 @@ void handle(int nsignal){
 
 int main(int argc, char **argv)
 {
+
 	int retorno=0, N, i;
 	char errbuf[PCAP_ERRBUF_SIZE], buffer[MAXBUF];
 	uint8_t *paquete=NULL;
@@ -61,7 +64,9 @@ int main(int argc, char **argv)
 		printf("Error: Fallo al capturar la senal SIGINT.\n");
 		exit(ERROR);
 	}	
+
 	N=atoi(argv[1]);
+
     if(argc==2){
 		//Apertura de interface
    	if ((descr = pcap_open_live("eth0",9,0,100, errbuf)) == NULL){
@@ -123,12 +128,14 @@ int main(int argc, char **argv)
 		}
 		printf("\n");
         if(pdumper){
+
 			pcap_dump((uint8_t *)pdumper,cabecera,paquete);
 		}
 	}
 	pcap_close(descr);
 	pcap_close(descr2);
 	pcap_dump_close(pdumper);
+}
 	return OK;
 }
 
