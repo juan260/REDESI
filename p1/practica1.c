@@ -25,6 +25,7 @@ y los vuelca a traza (¿correctamente?) nueva con tiempo actual
 #define ERROR 1
 
 #define ETH_FRAME_MAX 1514	// Tamanio maximo trama ethernet
+#define MAXBUF 100		// Tamanio maximo de N (primer argumento)
 
 pcap_t *descr=NULL,*descr2=NULL;
 pcap_dumper_t *pdumper=NULL;
@@ -43,8 +44,8 @@ void handle(int nsignal){
 
 int main(int argc, char **argv)
 {
-	int retorno=0;
-	char errbuf[PCAP_ERRBUF_SIZE];
+	int retorno=0, N, i;
+	char errbuf[PCAP_ERRBUF_SIZE], buffer[MAXBUF];
 	uint8_t *paquete=NULL;
 	struct pcap_pkthdr *cabecera=NULL;
 	char file_name[256];
@@ -55,12 +56,12 @@ int main(int argc, char **argv)
         exit(EXIT_SUCCESS);
 
         }
-
+	
 	if(signal(SIGINT,handle)==SIG_ERR){
 		printf("Error: Fallo al capturar la senal SIGINT.\n");
 		exit(ERROR);
 	}	
-
+	N=atoi(argv[1]);
     if(argc==2){
 		//Apertura de interface
    	if ((descr = pcap_open_live("eth0",9,0,100, errbuf)) == NULL){
@@ -103,8 +104,24 @@ int main(int argc, char **argv)
 		contador++;
 		printf("Nuevo paquete capturado a las %s\n",ctime((const time_t*)&(cabecera->ts.tv_sec)));
 		cabecera->ts.tv_sec+=172800;
-        printf("Nuevo paquete capturado con fecha editada %s\n",ctime((const time_t*)&(cabecera->ts.tv_sec)));
-
+        	printf("Nuevo paquete capturado con fecha editada %s\n",ctime((const time_t*)&(cabecera->ts.tv_sec)));
+		
+		sprintf(buffer, "%x", paquete);
+		if (strlen(buffer)<=2*(N-1)+1){
+			//Si el paquete es demasiado corto
+			printf("--Error: paquete demasiado corto, mostrando paquete entero.\n");
+			for(i=0;i*2<strlen(buffer);i++){
+				printf("%c", buffer[2*i]);
+				if(i*2+1<strlen(buffer)){
+					printf("%c ", buffer[2*i+1];
+				}
+			}
+		} else {
+			for(i=0;i<N;i++){
+				printf("%c%c ", buffer[2*i], buffer[2*i+1]);
+			}
+		}
+		printf("\n");
         if(pdumper){
 			pcap_dump((uint8_t *)pdumper,cabecera,paquete);
 		}
