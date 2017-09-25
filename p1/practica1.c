@@ -25,12 +25,38 @@ y los vuelca a traza (¿correctamente?) nueva con tiempo actual
 #define ERROR 1
 
 #define ETH_FRAME_MAX 1514	// Tamanio maximo trama ethernet
-#define MAXBUF 100		// Tamanio maximo de N (primer argumento)
+#define MAXBUF 512		// Tamanio maximo de N (primer argumento)
 
 pcap_t *descr=NULL,*descr2=NULL;
 pcap_dumper_t *pdumper=NULL;
 
 int contador =0;
+
+/**
+*	Funcion para imprimir el paquete que devuelve 1 en caso de error
+**/
+int imprimir_paquete(int paquete, int N){
+	char buffer[MAXBUF];
+	int i;
+	if(MAXBUF<N){return 1;}
+	sprintf(buffer, "%.512x", paquete);
+	if (strlen(buffer)<=2*(N-1)+1){
+		//Si el paquete es demasiado corto
+		printf("--Error: paquete demasiado corto, mostrando paquete entero.\n");
+		for(i=0;i*2<strlen(buffer);i++){
+			printf("%c", buffer[2*i]);
+			if(i*2+1<strlen(buffer)){
+				printf("%c ", buffer[2*i+1];
+			}
+		}
+	} else {
+		for(i=0;i<N;i++){
+			printf("%c%c ", buffer[2*i], buffer[2*i+1]);
+		}
+	}
+	printf("\n");
+	return 0;
+}
 
 void handle(int nsignal){
 	printf("\nControl C pulsado\n");
@@ -47,15 +73,20 @@ void handle(int nsignal){
 int main(int argc, char **argv)
 {
 
-	int retorno=0, N, i;
-	char errbuf[PCAP_ERRBUF_SIZE], buffer[MAXBUF];
+	int retorno=0, N;
+	char errbuf[PCAP_ERRBUF_SIZE];
 	uint8_t *paquete=NULL;
 	struct pcap_pkthdr *cabecera=NULL;
 	char file_name[256];
 	struct timeval time;
 
     if(argc<2){
-        printf("COmands.\n");
+        printf("\n\n\tError al introducir comandos.\n"
+		"Instrucciones: \n--Para inciar una captura introducir:\n\n\t"
+		"./practia1 N\n\nDonde N será el número de bytes a mostrar\n"
+		"de cada paquete.\n\n--Para leer una traza introducir:\n\n\t"
+		"./practica1 N name\n\nDonde N será el número de bytes a mostrar\n"
+		"de cada paquete y name el nombre de la traza.\n\n");
         exit(EXIT_SUCCESS);
 
         }
@@ -111,22 +142,11 @@ int main(int argc, char **argv)
 		cabecera->ts.tv_sec+=172800;
         	printf("Nuevo paquete capturado con fecha editada %s\n",ctime((const time_t*)&(cabecera->ts.tv_sec)));
 		
-		sprintf(buffer, "%x", paquete);
-		if (strlen(buffer)<=2*(N-1)+1){
-			//Si el paquete es demasiado corto
-			printf("--Error: paquete demasiado corto, mostrando paquete entero.\n");
-			for(i=0;i*2<strlen(buffer);i++){
-				printf("%c", buffer[2*i]);
-				if(i*2+1<strlen(buffer)){
-					printf("%c ", buffer[2*i+1];
-				}
-			}
-		} else {
-			for(i=0;i<N;i++){
-				printf("%c%c ", buffer[2*i], buffer[2*i+1]);
-			}
+		if(imprimir_paquete((int)paquete, N)){
+			printf("Error, aumentar MAXBUF\n\n");
+			break;
 		}
-		printf("\n");
+		
         if(pdumper){
 
 			pcap_dump((uint8_t *)pdumper,cabecera,paquete);
