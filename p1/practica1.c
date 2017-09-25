@@ -43,7 +43,7 @@ int contador =0;
 /**
 *	Funcion para imprimir el paquete que devuelve 1 en caso de error
 **/
-int imprimir_paquete(int paquete, int N){
+int imprimir_paquete(uint8_t paquete, int N){
 	char buffer[MAXBUF];
 	int i;
 	if(MAXBUF<N){return 1;}
@@ -89,14 +89,9 @@ int main(int argc, char **argv){
 	char file_name[256];
 	struct timeval time;
 
-<<<<<<< HEAD
-    if(argc<2||argc>3){
-        printf("\n\n\tError al introducir comandos.\n"
-=======
-	/*Caso 1*/
-    	if(argc<2){
+
+    	if(argc<2||argc>3){
        		printf("\n\n\tError al introducir comandos.\n"
->>>>>>> 8ecb5d826a53f496e949c3e79baa9328f33080f0
 		"Instrucciones: \n--Para inciar una captura introducir:\n\n\t"
 		"./practia1 N\n\nDonde N será el número de bytes a mostrar\n"
 		"de cada paquete.\n\n--Para leer una traza introducir:\n\n\t"
@@ -115,7 +110,7 @@ int main(int argc, char **argv){
 
     if(argc==2){
 		    //Apertura de interface
-       	if ((descr = pcap_open_live("eth0",9,0,100, errbuf)) == NULL){
+       	if ((descr = pcap_open_live("wlp4s0",9,0,100, errbuf)) == NULL){
 		    printf("Error: pcap_open_live(): %s, %s %d.\n",errbuf,__FILE__,__LINE__);
 		    exit(ERROR);
 	    }
@@ -160,7 +155,7 @@ int main(int argc, char **argv){
             	printf("Paquete capturado con fecha editada %s\n",ctime((const time_t*)&(cabecera->ts.tv_sec)));
 
 		
-		    if(imprimir_paquete((int)*paquete, N)){
+		    if(imprimir_paquete(*paquete, N)){
 			    printf("Error, aumentar MAXBUF\n\n");
 			    break;
 		    }
@@ -200,7 +195,7 @@ int main(int argc, char **argv){
 		        printf("Nuevo paquete capturado a las %s\nContenido del paquete: %u\n\n",
 		            ctime((const time_t*)&(cabecera->ts.tv_sec)), *paquete);
 		
-		        if(imprimir_paquete((int)*paquete, N)){
+		        if(imprimir_paquete(*paquete, N)){
 			        printf("Error, aumentar MAXBUF\n\n");
 			        break;
 		        }
