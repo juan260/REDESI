@@ -110,7 +110,7 @@ int main(int argc, char **argv){
 
     if(argc==2){
 		    //Apertura de interface
-       	if ((descr = pcap_open_live("wlp4s0",9,0,100, errbuf)) == NULL){
+       	if ((descr = pcap_open_live("eth0",9,0,100, errbuf)) == NULL){
 		    printf("Error: pcap_open_live(): %s, %s %d.\n",errbuf,__FILE__,__LINE__);
 		    exit(ERROR);
 	    }
