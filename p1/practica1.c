@@ -1,5 +1,15 @@
 /***************************************************************************
+<<<<<<< HEAD
  Practica 1
+=======
+practica1.c
+Programa que dependiendo del numero de argumentos de entrada o muestra los 
+paquetes capturados con fecha modificada, o muestra los paquetes con una determinada
+traza. En ambos casos, el programa muestra el argumento N.
+
+Compila: gcc -Wall -o EjemploPcapNextEx EjemploPcapNextEx.c -lpcap
+Autor: Claudia Cea, Juan Riera
+>>>>>>> 8ecb5d826a53f496e949c3e79baa9328f33080f0
 ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -15,11 +25,15 @@
 #include <linux/tcp.h>
 #include <signal.h>
 #include <time.h>
+
 #define OK 0
 #define ERROR 1
 
 #define ETH_FRAME_MAX 1514	// Tamanio maximo trama ethernet
-#define MAXBUF 512		// Tamanio maximo de N (primer argumento)
+#define MAXBUF 512		// Tamanio maximo de primer argumento
+
+
+/* Variables globales */
 
 pcap_t *descr=NULL,*descr2=NULL;
 pcap_dumper_t *pdumper=NULL;
@@ -64,25 +78,31 @@ void handle(int nsignal){
 	exit(OK);
  }
 
-int main(int argc, char **argv)
-{
 
-	int retorno=0, N;
+int main(int argc, char **argv){
+
+	int retorno=0;
+	int N;
 	char errbuf[PCAP_ERRBUF_SIZE];
 	uint8_t *paquete=NULL;
 	struct pcap_pkthdr *cabecera=NULL;
 	char file_name[256];
 	struct timeval time;
 
+<<<<<<< HEAD
     if(argc<2||argc>3){
         printf("\n\n\tError al introducir comandos.\n"
+=======
+	/*Caso 1*/
+    	if(argc<2){
+       		printf("\n\n\tError al introducir comandos.\n"
+>>>>>>> 8ecb5d826a53f496e949c3e79baa9328f33080f0
 		"Instrucciones: \n--Para inciar una captura introducir:\n\n\t"
 		"./practia1 N\n\nDonde N será el número de bytes a mostrar\n"
 		"de cada paquete.\n\n--Para leer una traza introducir:\n\n\t"
 		"./practica1 N name\n\nDonde N será el número de bytes a mostrar\n"
 		"de cada paquete y name el nombre de la traza.\n\n");
-        exit(EXIT_SUCCESS);
-
+        	exit(EXIT_SUCCESS);
         }
 	
 	if(signal(SIGINT,handle)==SIG_ERR){
@@ -91,6 +111,7 @@ int main(int argc, char **argv)
 	}	
 
 	N=atoi(argv[1]);
+
 
     if(argc==2){
 		    //Apertura de interface
@@ -137,6 +158,7 @@ int main(int argc, char **argv)
 		        
 		    cabecera->ts.tv_sec+=172800;
             	printf("Paquete capturado con fecha editada %s\n",ctime((const time_t*)&(cabecera->ts.tv_sec)));
+
 		
 		    if(imprimir_paquete((int)*paquete, N)){
 			    printf("Error, aumentar MAXBUF\n\n");
