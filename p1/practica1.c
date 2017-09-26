@@ -30,7 +30,7 @@ Autor: Claudia Cea, Juan Riera
 #define ERROR 1
 
 #define ETH_FRAME_MAX 1514	// Tamanio maximo trama ethernet
-#define MAXBUF 512		// Tamanio maximo de primer argumento
+#define MAXBUF 1024		// Tamanio maximo de primer argumento
 
 
 /* Variables globales */
@@ -43,7 +43,7 @@ int contador =0;
 /**
 *	Funcion para imprimir el paquete que devuelve 1 en caso de error
 **/
-int imprimir_paquete(uint8_t paquete, int N){
+/*int imprimir_paquete(uint8_t *paquete, int N){
 	char buffer[MAXBUF];
 	int i;
 	if(MAXBUF<N){return 1;}
@@ -64,6 +64,21 @@ int imprimir_paquete(uint8_t paquete, int N){
 	}
 	printf("\n");
 	return 0;
+}*/
+
+void imprimir_paquete(uint8_t *paquete, int N, int len){
+    int i;
+    if(N>len){
+        printf("Paquete demasiado corto, imprimiento paquete entero:\n");
+        for(i=0;i<len;i++){
+            printf("%02x ", paquete[i]);
+        }
+    } else {
+        for(i=0;i<N;i++){
+            printf("%02x ", paquete[i]);
+        }
+    }
+    printf("\n");
 }
 
 void handle(int nsignal){
@@ -110,7 +125,7 @@ int main(int argc, char **argv){
 
     if(argc==2){
 		    //Apertura de interface
-       	if ((descr = pcap_open_live("eth0",9,0,100, errbuf)) == NULL){
+       	if ((descr = pcap_open_live("wlp4s0",MAXBUF,0,100, errbuf)) == NULL){
 		    printf("Error: pcap_open_live(): %s, %s %d.\n",errbuf,__FILE__,__LINE__);
 		    exit(ERROR);
 	    }
@@ -155,10 +170,7 @@ int main(int argc, char **argv){
             	printf("Paquete capturado con fecha editada %s\n",ctime((const time_t*)&(cabecera->ts.tv_sec)));
 
 		
-		    if(imprimir_paquete(*paquete, N)){
-			    printf("Error, aumentar MAXBUF\n\n");
-			    break;
-		    }
+		    imprimir_paquete(paquete, N, cabecera->len);
 		
             if(pdumper){
 
@@ -195,10 +207,7 @@ int main(int argc, char **argv){
 		        printf("Nuevo paquete capturado a las %s\nContenido del paquete: %u\n\n",
 		            ctime((const time_t*)&(cabecera->ts.tv_sec)), *paquete);
 		
-		        if(imprimir_paquete(*paquete, N)){
-			        printf("Error, aumentar MAXBUF\n\n");
-			        break;
-		        }
+		        imprimir_paquete(paquete, N, cabecera->len);
 	        }
     	}
 	pcap_close(descr);
