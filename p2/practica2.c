@@ -37,6 +37,7 @@
 #define PACK_ERR -1
 #define TRACE_END -2
 #define NO_FILTER 0
+#define MAXBUF 512
 void analizar_paquete(const struct pcap_pkthdr *hdr, const uint8_t *pack);
 
 void handleSignal(int nsignal);
@@ -119,13 +120,13 @@ int main(int argc, char **argv)
 				pcap_close(descr);
 				exit(ERROR);
 			}
-			printf("Descomente el código para leer y abrir una traza pcap\n");
-			exit(ERROR);
+			//printf("Descomente el código para leer y abrir una traza pcap\n");
+			//exit(ERROR);
 
-			//if ((descr = pcap_open_offline(optarg, errbuf)) == NULL) {
-			//	printf("Error: pcap_open_offline(): File: %s, %s %s %d.\n", optarg, errbuf, __FILE__, __LINE__);
-			//	exit(ERROR);
-			//}
+			if ((descr = pcap_open_offline(optarg, errbuf)) == NULL) {
+				printf("Error: pcap_open_offline(): File: %s, %s %s %d.\n", optarg, errbuf, __FILE__, __LINE__);
+				exit(ERROR);
+			}
 
 			break;
 
@@ -219,10 +220,15 @@ int main(int argc, char **argv)
 
 
 void analizar_paquete(const struct pcap_pkthdr *hdr, const uint8_t *pack)
-{
+{	
+	char buffer[MAXBUF];
+	uint8_t version=0;
+	uint16_t tlength=0;
+	uint16_t posic=0;	
 	printf("Nuevo paquete capturado el %s\n", ctime((const time_t *) & (hdr->ts.tv_sec)));
 
 	int i = 0;
+	//CAPA 2
 	printf("Direccion ETH destino= ");
 	printf("%02X", pack[0]);
 
@@ -242,10 +248,39 @@ void analizar_paquete(const struct pcap_pkthdr *hdr, const uint8_t *pack)
 
 	printf("\n");
 
-	//pack+=ETH_ALEN;
-	// .....
-	// .....
-	// .....
+	pack+=ETH_ALEN;
+	printf("Protocolo = 0x");
+	//printf("%02X", pack[0]);
 
+	for (i = 0; i < ETH_TLEN; i++) {
+		printf("%02X", pack[i]);
+		sprintf(buffer+2*i, "%02X", pack[i]);
+	}
+	if(strcmp(buffer, "0800")){
+		printf("\nError: protocolo no reconocido\n");
+		exit(EXIT_SUCCESS);	
+	} else {
+		printf(" (IPv4)");
+	}
 	printf("\n\n");
+	//CAPA 3
+	pack += ETH_TLEN;
+
+	printf("Version ip: ");
+	memcpy(&version, pack, 1);
+	sprintf(buffer, "0%x", version);
+	char IHL = buffer[2];
+	buffer[2]=0;
+	printf("%d\n", (int)strtol(buffer, NULL, 10));
+	printf("Longiud de cabecera: %d bytes\n", (int)strtol(&IHL, NULL, 10)*4);
+
+	//Saltamos Version, IHL y Tipo de Servicio, un total de 2 bytes
+	pack += 2;
+	memcpy(&tlength, pack, 2);	
+	printf("Longitud total: %u\n", ntohs(tlength));
+	
+
+	pack += 4;
+	memcpy(&posic, pack, 2);
+	printf("Posicion: %u\n", posic%(8192));
 }
