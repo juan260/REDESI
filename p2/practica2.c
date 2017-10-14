@@ -30,7 +30,7 @@
 #define ETH_FRAME_MIN 60     /* Tamanio minimo la trama ethernet (sin CRC) */
 #define ETH_DATA_MAX  (ETH_FRAME_MAX - ETH_HLEN) /* Tamano maximo y minimo de los datos de una trama ethernet*/
 #define ETH_DATA_MIN  (ETH_FRAME_MIN - ETH_HLEN)
-#define IP_ALEN 4			/* Tamanio de la direccion IP					*/
+#define IP_ALEN 4	     /* Tamanio de la direccion IP		   */
 #define OK 0
 #define ERROR 1
 #define PACK_READ 1
@@ -38,10 +38,13 @@
 #define TRACE_END -2
 #define NO_FILTER 0
 #define MAXBUF 512
+
+/*Funciones definidas*/
 void analizar_paquete(const struct pcap_pkthdr *hdr, const uint8_t *pack);
 
 void handleSignal(int nsignal);
 
+/*Variables globales*/
 pcap_t *descr = NULL;
 uint64_t contador = 0;
 uint8_t ipsrc_filter[IP_ALEN] = {NO_FILTER};
@@ -49,17 +52,15 @@ uint8_t ipdst_filter[IP_ALEN] = {NO_FILTER};
 uint16_t sport_filter= NO_FILTER;
 uint16_t dport_filter = NO_FILTER;
 
-void handleSignal(int nsignal)
-{
+void handleSignal(int nsignal){
 	(void) nsignal; // indicamos al compilador que no nos importa que nsignal no se utilice
 
-	printf("Control C pulsado (%"PRIu64" paquetes leidos)\n", contador);
+	printf("\nControl C pulsado (%"PRIu64" paquetes leidos)\n", contador);
 	pcap_close(descr);
 	exit(OK);
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv){
 	uint8_t *pack = NULL;
 	struct pcap_pkthdr *hdr;
 
@@ -203,6 +204,7 @@ int main(int argc, char **argv)
 		if (retorno == PACK_READ) { //Todo correcto
 			contador++;
 			analizar_paquete(hdr, pack);
+			printf("\n\n");
 		
 		} else if (retorno == PACK_ERR) { //En caso de error
 			printf("Error al capturar un paquetes %s, %s %d.\n", pcap_geterr(descr), __FILE__, __LINE__);
@@ -219,8 +221,7 @@ int main(int argc, char **argv)
 
 
 
-void analizar_paquete(const struct pcap_pkthdr *hdr, const uint8_t *pack)
-{	
+void analizar_paquete(const struct pcap_pkthdr *hdr, const uint8_t *pack){	
 	char buffer[MAXBUF];
 	uint8_t version = 0;
 	uint16_t port = 0;
@@ -228,13 +229,16 @@ void analizar_paquete(const struct pcap_pkthdr *hdr, const uint8_t *pack)
 	uint16_t tlength = 0;
 	uint16_t posic = 0;
 	int flag = 0;
-	/* Aqui almacenaremos el tipo de protoolo de la capa 4 */	
-	int UDP0_TCP1 = 0;
+	int UDP0_TCP1 = 0; /*Aqui almacenaremos el tipo de protocolo de la capa 4 */
+	int i = 0;
+
 	printf("Nuevo paquete capturado el %s\n", ctime((const time_t *) & (hdr->ts.tv_sec)));
 
-	int i = 0;
+	
 	//CAPA 2
-	printf("Direccion ETH destino= ");
+	printf("CAPA 2\n");
+
+	printf("Direccion ETH destino = ");
 	printf("%02X", pack[0]);
 
 	for (i = 1; i < ETH_ALEN; i++) {
@@ -252,114 +256,129 @@ void analizar_paquete(const struct pcap_pkthdr *hdr, const uint8_t *pack)
 	}
 
 	printf("\n");
-
 	pack+=ETH_ALEN;
+
 	printf("Protocolo = 0x");
 
 	for (i = 0; i < ETH_TLEN; i++) {
 		printf("%02X", pack[i]);
 		sprintf(buffer+2*i, "%02X", pack[i]);
 	}
+
 	if(strcmp(buffer, "0800")){
-		printf("\nError: protocolo no reconocido\n");
+		printf("\nError: protocolo no reconocido\n"); /*El protocolo no es IPv4 asi que no imprimimos las siguientes capas*/
 		return;	
-	} else {
-		printf(" (IPv4)");
+	} 
+	else {
+		printf(" (IPv4)\n");
 	}
-	printf("\n\n");
+
+	printf("\n");
 
 	//CAPA 3
+	printf("CAPA 3\n");
+
 	pack += ETH_TLEN;
 
-	printf("Version ip: ");
+	printf("Version IP = ");
 	memcpy(&version, pack, 1);
 	sprintf(buffer, "0%x", version);
 	char IHL = buffer[2];
 	buffer[2]=0;
 	printf("%d\n", (int)strtol(buffer, NULL, 10));
-	printf("Longiud de cabecera: %d bytes\n", (int)strtol(&IHL, NULL, 10)*4);
 
-	//Saltamos Version, IHL y Tipo de Servicio, un total de 2 bytes
-	pack += 2;
+	printf("Longiud de cabecera = %d bytes\n", (int)strtol(&IHL, NULL, 10)*4);
+
+	pack += 2; /*Saltamos Version, IHL y Tipo de Servicio, un total de 2 bytes*/
 	memcpy(&tlength, pack, 2);	
-	printf("Longitud total: %u\n", ntohs(tlength));
+	printf("Longitud total = %u\n", ntohs(tlength));
 	
 
 	pack += 4;
 	memcpy(&posic, pack, 2);
 	posic = ntohs(posic);
-	posic = posic & 8191;
-	printf("Posicion: %u\n", posic*8);
+	posic = posic & 8191; /*Hacemos AND con 0001111111111111 que en decimal es 8191 para poner los primeros 3 bits que son de otro campo a 0*/
+	printf("Posicion/Desplazamiento = %u\n", posic*8);
 	if(posic != 0){
-		flag = 1;
+		flag = 1; /*El desplazamiento es distinto de 0*/
 	}
 
 	pack += 2;
-	printf("Tiempo de vida: %u\n", *pack);
+	printf("Tiempo de vida = %u\n", *pack);
 
 	pack += 1;
-	printf("Protocolo: %u", *pack);
+	printf("Protocolo = %u", *pack);
 	if(*pack == 6){
 		printf(" (TCP)\n");
-		UDP0_TCP1 = 1;
-	} else if(*pack == 17) {
+		UDP0_TCP1 = 1; /*Ponemos el flag a 1 porque es de tipo TCP*/
+	} 
+	else if(*pack == 17) {
 		printf(" (UDP)\n");
-	} else {
-		flag = 1;
-		printf(" Error: protocolo desconocido\n\n");
+		UDP0_TCP1 = 0; /*Ponemos el flag a 0 porque es de tipo UDP*/
+	} 
+	else {
+		flag = 1; /*No se trata de un protocolo TCP ni de un protocolo UDP*/
+		printf(" Error: protocolo no reconocido\n\n");
 	}
 	
 	pack += 3;
-	printf("Direccion de origen: %u", *pack);
+	printf("Direccion IP de origen = %u", *pack);
 	for (i = 1; i < 4; i++) {
 		printf(".%u", pack[i]);
 	}
 
 	pack += 4;
-	printf("\nDireccion de destino: %u", *pack);
+	printf("\nDireccion IP de destino = %u", *pack);
 	for (i = 1; i < 4; i++) {
 		printf(".%u", pack[i]);
 	}
 	printf("\n");
 	if(flag == 1){
-		return;
+		return; /*El desplazamiento es distinto de 0 o el protocolo no es UDP ni TCP asi que no imprimimos los campos de la siguiente capa*/
 	}
+
 	if((int)strtol(&IHL, NULL, 10)*4 > 20){
 		pack += 8;
 	} else {
 		pack += 4;
 	}
-	//CAPA 4
 
-	
-	memcpy(&port, pack, 2);
-		
+	printf("\n");
+
+	//CAPA 4
+	printf("CAPA 4\n");
+
+	memcpy(&port, pack, 2);	
 	port = ntohs(port);
-	printf("\nPuerto de origen: %u\n", port);
+	printf("Puerto de origen = %u\n", port);
 	
 	pack += 2;
 	memcpy(&port, pack, 2);
 	port = ntohs(port);
-	printf("Puerto de destino: %u\n", port);
+	printf("Puerto de destino = %u\n", port);
 	
-	if(UDP0_TCP1==0){
+	/*El paquete es de tipo UDP*/
+	if(UDP0_TCP1==0){ 
 		pack += 2;
 		memcpy(&longitudUDP, pack, 2);
 		longitudUDP = ntohs(longitudUDP);
-		printf("Longitud: %u\n", longitudUDP);	
-	} else {
+		printf("Longitud = %u\n", longitudUDP);	
+	} 
+	/*El paquete es de tipo TCP*/
+	else { 
 		pack += 11;
 		if((*pack & 16) > 0){
-			printf("ACK: 1\n");
+			printf("ACK = 1\n");
 		} else {
-			printf("ACK: 0\n");
+			printf("ACK = 0\n");
 		}
 		
 		if((*pack & 2) > 0){
-			printf("SYN: 1\n");
+			printf("SYN = 1\n");
 		} else {
-			printf("SYN: 0\n");
+			printf("SYN = 0\n");
 		}
 	}
+	
 	
 }
