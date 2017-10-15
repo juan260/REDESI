@@ -367,13 +367,13 @@ void analizar_paquete(const struct pcap_pkthdr *hdr, const uint8_t *pack){
 	/*El paquete es de tipo TCP*/
 	else { 
 		pack += 11;
-		if((*pack & 16) > 0){
+		if((*pack & 16) > 0){ /*Hacemos AND con 00010000 que en decimal es 16 para ver si el campo ACK esta a 0 o a 1*/
 			printf("ACK = 1\n");
 		} else {
 			printf("ACK = 0\n");
 		}
 		
-		if((*pack & 2) > 0){
+		if((*pack & 2) > 0){ /*Hacemos AND con 00000010 que en decimal es 2 para ver si el campo SYN esta a 0 o a 1*/
 			printf("SYN = 1\n");
 		} else {
 			printf("SYN = 0\n");
