@@ -47,6 +47,11 @@ void handleSignal(int nsignal);
 /*Variables globales*/
 pcap_t *descr = NULL;
 uint64_t contador = 0;
+int paquetes_filtrados =0;
+uint8_t flagIpo = 0;
+uint8_t flagIpd = 0;
+uint8_t flagPo = 0;
+uint8_t flagPd = 0;
 uint8_t ipsrc_filter[IP_ALEN] = {NO_FILTER};
 uint8_t ipdst_filter[IP_ALEN] = {NO_FILTER};
 uint16_t sport_filter= NO_FILTER;
@@ -56,6 +61,7 @@ void handleSignal(int nsignal){
 	(void) nsignal; // indicamos al compilador que no nos importa que nsignal no se utilice
 
 	printf("\nControl C pulsado (%"PRIu64" paquetes leidos)\n", contador);
+	printf("Paquetes impresos completos: %d\n\n", paquetes_filtrados);
 	pcap_close(descr);
 	exit(OK);
 }
@@ -69,7 +75,6 @@ int main(int argc, char **argv){
 	int long_index = 0, retorno = 0;
 	char opt;
 	
-	(void) errbuf; //indicamos al compilador que no nos importa que errbuf no se utilice. Esta linea debe ser eliminada en la entrega final.
 
 	if (signal(SIGINT, handleSignal) == SIG_ERR) {
 		printf("Error: Fallo al capturar la senal SIGINT.\n");
@@ -106,13 +111,18 @@ int main(int argc, char **argv){
 				pcap_close(descr);
 				exit(ERROR);
 			}
-			printf("Descomente el código para leer y abrir de una interfaz\n");
-			exit(ERROR);
+			//printf("Descomente el código para leer y abrir de una interfaz\n");
+			//exit(ERROR);
 			
 			//if ( (descr = ??(optarg, ??, ??, ??, errbuf)) == NULL){
-			//	printf("Error: ??(): Interface: %s, %s %s %d.\n", optarg,errbuf,__FILE__,__LINE__);
+			//	
 			//	exit(ERROR);
 			//}
+			
+			if ((descr = pcap_open_live(optarg, MAXBUF,0,100, errbuf)) == NULL){
+		    		printf("Error: pcap_open_live(): Interface: %s, %s %s %d.\n", optarg,errbuf,__FILE__,__LINE__);
+		   		exit(ERROR);
+	   		}
 			break;
 
 		case 'f' :
@@ -132,6 +142,7 @@ int main(int argc, char **argv){
 			break;
 
 		case '1' :
+			flagIpo = 1;
 			if (sscanf(optarg, "%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8"", &(ipsrc_filter[0]), &(ipsrc_filter[1]), &(ipsrc_filter[2]), &(ipsrc_filter[3])) != IP_ALEN) {
 				printf("Error ipo_filtro. Ejecucion: %s /ruta/captura_pcap [-ipo IPO] [-ipd IPD] [-po PO] [-pd PD]: %d\n", argv[0], argc);
 				exit(ERROR);
@@ -140,6 +151,7 @@ int main(int argc, char **argv){
 			break;
 
 		case '2' :
+			flagIpd = 1;
 			if (sscanf(optarg, "%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8"", &(ipdst_filter[0]), &(ipdst_filter[1]), &(ipdst_filter[2]), &(ipdst_filter[3])) != IP_ALEN) {
 				printf("Error ipd_filtro. Ejecucion: %s /ruta/captura_pcap [-ipo IPO] [-ipd IPD] [-po PO] [-pd PD]: %d\n", argv[0], argc);
 				exit(ERROR);
@@ -148,6 +160,7 @@ int main(int argc, char **argv){
 			break;
 
 		case '3' :
+			flagPo = 1;
 			if ((sport_filter= atoi(optarg)) == 0) {
 				printf("Error po_filtro.Ejecucion: %s /ruta/captura_pcap [-ipo IPO] [-ipd IPD] [-po PO] [-pd PD]: %d\n", argv[0], argc);
 				exit(ERROR);
@@ -156,6 +169,7 @@ int main(int argc, char **argv){
 			break;
 
 		case '4' :
+			flagPd = 1;
 			if ((dport_filter = atoi(optarg)) == 0) {
 				printf("Error pd_filtro. Ejecucion: %s /ruta/captura_pcap [-ipo IPO] [-ipd IPD] [-po PO] [-pd PD]: %d\n", argv[0], argc);
 				exit(ERROR);
@@ -215,6 +229,7 @@ int main(int argc, char **argv){
 	} while (retorno != TRACE_END);
 
 	printf("Se procesaron %"PRIu64" paquetes.\n\n", contador);
+	printf("Paquetes que han pasado el filtro: %d\n\n", paquetes_filtrados);
 	pcap_close(descr);
 	return OK;
 }
@@ -234,6 +249,7 @@ void analizar_paquete(const struct pcap_pkthdr *hdr, const uint8_t *pack){
 
 	printf("Nuevo paquete capturado el %s\n", ctime((const time_t *) & (hdr->ts.tv_sec)));
 
+	printf("Numero de paquete: %"PRIu64"\n", contador);
 	
 	//CAPA 2
 	printf("CAPA 2\n");
@@ -322,16 +338,39 @@ void analizar_paquete(const struct pcap_pkthdr *hdr, const uint8_t *pack){
 	}
 	
 	pack += 3;
+
+		
 	printf("Direccion IP de origen = %u", *pack);
 	for (i = 1; i < 4; i++) {
 		printf(".%u", pack[i]);
 	}
-
+	
+	if(flagIpo == 1){
+		for(i=0;i<4;i++){
+			if(pack[i]!=ipsrc_filter[i]){
+				printf("\nLa direccion origen no coincide con la del filtro, deshechando paquete\n\n");
+				return;
+			}
+		}
+	}
+		
+					
 	pack += 4;
 	printf("\nDireccion IP de destino = %u", *pack);
 	for (i = 1; i < 4; i++) {
 		printf(".%u", pack[i]);
 	}
+	
+	if(flagIpd == 1){
+		for(i=0;i<4;i++){
+			if(pack[i]!=ipdst_filter[i]){
+				printf("\nLa direccion de destino no coincide con la del filtro, deshechando paquete\n\n");
+				return;
+			}
+		}
+	}
+	
+	
 	printf("\n");
 	if(flag == 1){
 		return; /*El desplazamiento es distinto de 0 o el protocolo no es UDP ni TCP asi que no imprimimos los campos de la siguiente capa*/
@@ -351,11 +390,23 @@ void analizar_paquete(const struct pcap_pkthdr *hdr, const uint8_t *pack){
 	memcpy(&port, pack, 2);	
 	port = ntohs(port);
 	printf("Puerto de origen = %u\n", port);
+	if(flagPo==1){
+		if(port!=sport_filter){
+			printf("El puerto de origen no coincide con el del filtro, deshechando paquete\n\n");
+			return;
+		}
+	}
 	
 	pack += 2;
 	memcpy(&port, pack, 2);
 	port = ntohs(port);
 	printf("Puerto de destino = %u\n", port);
+	if(flagPd==1){
+		if(port!=dport_filter){
+			printf("El puerto de destino no coincide con el del filtro, deshechando paquete\n\n");
+			return;
+		}
+	}
 	
 	/*El paquete es de tipo UDP*/
 	if(UDP0_TCP1==0){ 
@@ -380,5 +431,5 @@ void analizar_paquete(const struct pcap_pkthdr *hdr, const uint8_t *pack){
 		}
 	}
 	
-	
+	paquetes_filtrados += 1;
 }
