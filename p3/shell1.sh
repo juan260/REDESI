@@ -3,6 +3,10 @@
 # los que sean ip los udp, tcp u otros (ip es ethernet = 0x0800
 # o ethernet de tipo vlan (0x8100) con tipo vlan ip (0x0800)
 
+#Inicializacion de MACROS
+STDPREC=4
+
+
 tshark -r traza.pcap -T fields -e ip.proto -Y 'eth.type == 0x0800 or (eth.type == 0x8100 and vlan.etype == 0x0800)' > ethfile
 
 #tshark -r traza.pcap -T fields -e eth.type -Y '(eth.type == 0x0800 or (eth.type == 0x8100 and vlan.etype == 0x0800)) and
@@ -31,8 +35,10 @@ results=$(awk 'BEGIN{udp=0;tcp=0;}
 tcplines=$(echo $results | cut -f 1 -d \ )
 udplines=$(echo $results | cut -f 2 -d \ )
 
-echo "Hello, $LOGNAME, number of lines $nlines, $ethlines, $tcplines, $udplines"
-
+echo "Hola, $LOGNAME"
+echo "Porcentaje de paquetes IP: $(echo "$ethlines*100/$nlines" | bc -l | head -c $((3+STDPREC))) %"
+echo "Dentro de estos el $(echo "$tcplines*100/$ethlines" | bc -l| head -c $((3+STDPREC))) % son TCP"
+echo "y el $(echo "$udplines*100/$ethlines" | bc -l| head -c $((3+STDPREC))) % son UDP"
 
 #Eliminamos archivos temporales
 rm -f ethfile  allfile
