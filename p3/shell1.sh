@@ -6,43 +6,63 @@
 #Inicializacion de MACROS
 STDPREC=4
 
+if ! [ -e ipsrcfile.tmp ]
+then
+    tshark -r traza.pcap -T fields -e ip.src -e frame.len -Y 'eth.type == 0x0800 or (eth.type == 0x8100 and vlan.etype == 0x0800)' > ipsrcfile.tmp
 
-tshark -r traza.pcap -T fields -e ip.proto -e ip.dst -e ip.src -e tcp.dstport -e tcp.srcport -e udp.dstport -e udp.srcport -Y 'eth.type == 0x0800 or (eth.type == 0x8100 and vlan.etype == 0x0800)' > ethfile
+fi
 
-#tshark -r traza.pcap -T fields -e eth.type -Y '(eth.type == 0x0800 or (eth.type == 0x8100 and vlan.etype == 0x0800)) and
-#                                                ip.proto == 0x06' > tcpfile
 
-#tshark -r traza.pcap -T fields -e eth.type -Y '(eth.type == 0x0800 or (eth.type == 0x8100 and vlan.etype == 0x0800)) 
-#                                               and ip.proto == 0x11' > udpfile
+if ! [ -e ipdstfile.tmp ]
+then
+    tshark -r traza.pcap -T fields -e ip.dst -e frame.len -Y 'eth.type == 0x0800 or (eth.type == 0x8100 and vlan.etype == 0x0800)' > ipdstfile.tmp
 
+fi
+
+
+if ! [ -e udpsrcfile.tmp ]
+then
+    tshark -r traza.pcap -T fields -e udp.srcport -e frame.len -Y '(eth.type == 0x0800 or (eth.type == 0x8100 and vlan.etype == 0x0800)) and ip.proto == 0x11' > udpsrcfile.tmp
+
+fi
+
+
+if ! [ -e udpdstfile.tmp ]
+then
+    tshark -r traza.pcap -T fields -e udp.dstport -e frame.len -Y '(eth.type == 0x0800 or (eth.type == 0x8100 and vlan.etype == 0x0800)) and ip.proto == 0x11' > udpdstfile.tmp
+
+fi
+
+
+if ! [ -e tcpsrcfile.tmp ]
+then
+    tshark -r traza.pcap -T fields -e tcp.srcport -e frame.len -Y '(eth.type == 0x0800 or (eth.type == 0x8100 and vlan.etype == 0x0800)) and ip.proto == 0x06' > tcpsrcfile.tmp
+
+fi
+
+
+if ! [ -e tcpdstfile.tmp ]
+then
+    tshark -r traza.pcap -T fields -e tcp.dstport -e frame.len -Y '(eth.type == 0x0800 or (eth.type == 0x8100 and vlan.etype == 0x0800)) and ip.proto == 0x06' > tcpdstfile.tmp
+
+fi
+if ! [ -e ipfile ] 
+then
+tshark -r traza.pcap -T fields -e ip.proto -e ip.dst -e ip.src -e tcp.dstport -e tcp.srcport -e udp.dstport -e udp.srcport -e frame.len -Y 'eth.type == 0x0800 or (eth.type == 0x8100 and vlan.etype == 0x0800)' > ipfile
+fi
+
+if ! [ -e allfile ]
+then
 tshark -r traza.pcap -T fields -e eth.type  > allfile
+fi
 
-echo "Aqui vamos 1"
-#Contamos el tamaño total de la traza, y el numero de tramas ethernet
-nlines=$(wc -l < allfile)
-ethlines=$(wc -l < ethfile)
+./ej1.sh STDPREC
+echo
+#Calculemos el top de direcciones Ip por numero de paquetes
+echo "Top direcciones IP origen por numero de paquetes:" 
+sort ipsrcfile.tmp|uniq -c|sort -rn|head -n 10 |awk 'BEGIN{FS=" "; printf("\nDireccion\t\tNumero de paquetes\n");} {printf("%d\t%d\n",$2, $1);}'
 
-#Ahora contamos los udp's y tcp's, guardamos el resultado en un string
-results=$(awk 'BEGIN{udp=0;tcp=0;} 
-        {if ($1 == 6) tcp=tcp+1;
-         if ($1 == 17) udp=udp+1;}
-        END{printf("%d %d", tcp, udp);}' ethfile)
+echo
+echo "Top direcciones IP origen por bytes transmitidos:"
+#sort ipsrcfile.tmp|awk '{array=[]}{array[$1]+=$2}'|sort -rn|awk 'BEGIN{printf("\nDireccion\t\tBytes\n");} {printf("%d\t%d\n",$2, $1);}'
 
-#Parseamos el string resultado recortando
-#(cut -f <campo que te interesa> -d <separador, que en este caso es el ' ' y
-#   que para que shell no crea que es un espacio lo precedemos de \)
-
-tcplines=$(echo $results | cut -f 1 -d \ )
-udplines=$(echo $results | cut -f 2 -d \ )
-
-echo "Hola, $LOGNAME"
-echo "Porcentaje de paquetes IP: $(echo "$ethlines*100/$nlines" | bc -l | head -c $((3+STDPREC))) %"
-echo "Dentro de estos el $(echo "$tcplines*100/$ethlines" | bc -l| head -c $((3+STDPREC))) % son TCP"
-echo "y el $(echo "$udplines*100/$ethlines" | bc -l| head -c $((3+STDPREC))) % son UDP"
-
-#Calculemos el top de direcciones Ip por bytes
-awk '{printf "%d\t%d\n", $2, $1}' prueba.txt | sort
-
-
-#Eliminamos archivos temporales
-rm -f ethfile  allfile
