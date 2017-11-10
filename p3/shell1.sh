@@ -7,7 +7,7 @@
 STDPREC=4
 
 
-tshark -r traza.pcap -T fields -e ip.proto -Y 'eth.type == 0x0800 or (eth.type == 0x8100 and vlan.etype == 0x0800)' > ethfile
+tshark -r traza.pcap -T fields -e ip.proto -e ip.dst -e ip.src -e tcp.dstport -e tcp.srcport -e udp.dstport -e udp.srcport -Y 'eth.type == 0x0800 or (eth.type == 0x8100 and vlan.etype == 0x0800)' > ethfile
 
 #tshark -r traza.pcap -T fields -e eth.type -Y '(eth.type == 0x0800 or (eth.type == 0x8100 and vlan.etype == 0x0800)) and
 #                                                ip.proto == 0x06' > tcpfile
@@ -39,6 +39,10 @@ echo "Hola, $LOGNAME"
 echo "Porcentaje de paquetes IP: $(echo "$ethlines*100/$nlines" | bc -l | head -c $((3+STDPREC))) %"
 echo "Dentro de estos el $(echo "$tcplines*100/$ethlines" | bc -l| head -c $((3+STDPREC))) % son TCP"
 echo "y el $(echo "$udplines*100/$ethlines" | bc -l| head -c $((3+STDPREC))) % son UDP"
+
+#Calculemos el top de direcciones Ip por bytes
+awk '{printf "%d\t%d\n", $2, $1}' prueba.txt | sort
+
 
 #Eliminamos archivos temporales
 rm -f ethfile  allfile
