@@ -56,11 +56,11 @@ then
 tshark -r traza.pcap -T fields -e eth.type  > allfile
 fi
 
-./ej1.sh STDPREC
+./ej1.sh $STDPREC
 echo
 #Calculemos el top de direcciones Ip por numero de paquetes
 echo "Top direcciones IP origen por numero de paquetes:" 
-sort ipsrcfile.tmp|uniq -c|sort -rn|head -n 10 |awk 'BEGIN{FS=" "; printf("\nDireccion\t\tNumero de paquetes\n");} {printf("%d\t%d\n",$2, $1);}'
+sort ipsrcfile.tmp |uniq -c|sort -rn|head -n 10 |cut -f 1 #awk 'BEGIN{FS="."; printf("\nDireccion\t\tNumero de paquetes\n");} {printf("%d.%d.%d.%d\t%d\n", $2, $3, $4, $5, $1);}'
 
 echo
 echo "Top direcciones IP origen por bytes transmitidos:"
