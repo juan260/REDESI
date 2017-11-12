@@ -58,11 +58,21 @@ fi
 
 ./ej1.sh $STDPREC
 echo
-#Calculemos el top de direcciones Ip por numero de paquetes
-echo "Top direcciones IP origen por numero de paquetes:" 
-sort ipsrcfile.tmp |uniq -c|sort -rn|head -n 10 |cut -f 1 #awk 'BEGIN{FS="."; printf("\nDireccion\t\tNumero de paquetes\n");} {printf("%d.%d.%d.%d\t%d\n", $2, $3, $4, $5, $1);}'
+#Calculemos el top de direcciones Ip origen
+./ej2.sh ipsrcfile.tmp "direcciones IP origen" "Direccion"
 
-echo
-echo "Top direcciones IP origen por bytes transmitidos:"
-#sort ipsrcfile.tmp|awk '{array=[]}{array[$1]+=$2}'|sort -rn|awk 'BEGIN{printf("\nDireccion\t\tBytes\n");} {printf("%d\t%d\n",$2, $1);}'
+#Calculemos el top de direcciones Ip destino
+./ej2.sh ipdstfile.tmp "direcciones IP destino" "Direccion"
+
+#Calculemos el top de direcciones TCP origen 
+./ej2.sh tcpsrcfile.tmp "puerto TCP origen" "Puerto"
+
+#Calculemos el top de direcciones TCP destino
+./ej2.sh tcpdstfile.tmp "puertos TCP destino" "Puerto"
+
+#Calculemos el top de puertos UDP origen
+./ej2.sh udpsrcfile.tmp "puertos UDP origen" "Puerto"
+
+#Calculemos el top de puertos UDP destino
+./ej2.sh udpdstfile.tmp "puertos UDP destino" "Puerto"
 
