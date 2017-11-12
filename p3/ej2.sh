@@ -1,7 +1,7 @@
 #!/bin/bash
 #Sript que calcula el top 10 de un determinado archivo
 #Recibe 3 argumentos: nombre del archivo, nombre del campo calculado y la cadena del tipo de lo 
-#imprimido en la primera columna (en este ejercicio siempre es o "Puerto" o "Direccion")
+#impreso en la primera columna (en este ejercicio siempre es o "Puerto" o "Direccion")
 
 echo "Top 10 $2 por numero de paquetes"
 sort $1 -n  |cut -f 1|uniq -c|sort -rn|head -n 10|awk -v texto=$3 'BEGIN{printf("\n%s\t\tNumero de paquetes\n", texto);} {printf("%s\t\t%s\n",$2, $1);}'
