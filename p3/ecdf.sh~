@@ -1,0 +1,8 @@
+#!/bin/bash
+# Calcula las ecfd del archivo como primer parametro
+
+#sort -n  ejemplo.txt |uniq -c | awk 'BEGIN{line=1;}{ array[$2] = array[aes[line-1]] + $1; aes[line]=$2; finalkey=$2; line++;} END{for(a in aes){printf("%s\t%s\n",a, array[a]/array[finalkey]);} }' | sort -n
+
+sort -n  $1 |uniq -c | awk '{array[NR]=array[NR-1]+$1;array2[NR]=$2;} END{for(i=1;i<=NR;i++){printf("%s\t%s\n", array2[i], array[i]/array[NR]);}}' | sort -n
+
+#sort -n ejemplo.txt |uniq -c | awk '{array[$2] = array[$2 -1] + $1; print $2, array[$2];}'
