@@ -7,8 +7,7 @@ tshark -r traza.pcap -T fields -e frame.len -Y 'eth.src == 00:11:88:cc:33:21' > 
 
 fi
 
-n=$(wc -l < macsrcfile.tmp)
-
+./ecdf.sh macsrcfile.tmp 
 
 #MAC destino
 if ! [ -e macdstfile.tmp ]
@@ -17,8 +16,7 @@ tshark -r traza.pcap -T fields -e frame.len -Y 'eth.dst == 00:11:88:cc:33:21' > 
 
 fi
 
-n1=$(wc -l < macdstfile.tmp)
-
+#./ecdf.sh macdstfile.tmp
 
 #HTTP origen
 if ! [ -e httpsrcfile.tmp ]
@@ -27,8 +25,7 @@ tshark -r traza.pcap -T fields -e ip.len -Y 'tcp.srcport == 80' > httpsrcfile.tm
 
 fi
 
-n2=$(wc -l < httpsrcfile.tmp)
-
+#./ecdf.sh httpsrcfile.tmp
 
 #HTTP destino
 if ! [ -e httpdstfile.tmp ]
@@ -37,8 +34,8 @@ tshark -r traza.pcap -T fields -e ip.len -Y 'tcp.dstport == 80' > httpdstfile.tm
 
 fi
 
-n3=$(wc -l < httpdstfile.tmp)
 
+#./ecdf.sh httpdstfile.tmp
 
 #DNS origen
 if ! [ -e dnssrcfile.tmp ]
@@ -47,7 +44,7 @@ tshark -r traza.pcap -T fields -e ip.len -Y 'udp.srcport == 53' > dnssrcfile.tmp
 
 fi
 
-n4=$(wc -l < dnssrcfile.tmp)
+#./ecdf.sh dnssrcfile.tmp
 
 #DNS destino
 if ! [ -e dnsdstfile.tmp ]
@@ -56,5 +53,5 @@ tshark -r traza.pcap -T fields -e ip.len -Y 'udp.dstport == 53' > dnsdstfile.tmp
 
 fi
 
-n5=$(wc -l < dnsdstfile.tmp)
+#./ecdf.sh dnsdstfile.tmp
 
