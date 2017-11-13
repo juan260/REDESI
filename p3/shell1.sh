@@ -56,6 +56,11 @@ then
 tshark -r traza.pcap -T fields -e eth.type  > allfile
 fi
 
+if ! [ -e times.tmp ]
+then
+tshark -r traza.pcap -T fields -e frame.time_delta > times.tmp
+fi
+
 ./ej1.sh $STDPREC
 echo
 #Calculemos el top de direcciones Ip origen
@@ -76,3 +81,13 @@ echo
 #Calculemos el top de puertos UDP destino
 ./ej2.sh udpdstfile.tmp "puertos UDP destino" "Puerto"
 
+#Calculemos las tasas
+echo
+echo "Calculo de los anchos de banda"
+./tasa.sh traza.pcap | awk 'BEGIN{printf("Intervalo\tAncho\n");} {printf("%d\t\t%d\n", NR, $1);}'
+
+#Calculemos el tiempo entre paquetes
+echo
+echo "Calculo de las frecuencias de los tiempos de separacion entre paquetes"
+echo "Tiempo        Frecuencia"
+./times.sh times.tmp
