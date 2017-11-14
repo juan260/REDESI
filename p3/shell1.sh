@@ -82,12 +82,7 @@ echo
 ./ej2.sh udpdstfile.tmp "puertos UDP destino" "Puerto"
 
 #Calculemos las tasas
-echo
-echo "Calculo de los anchos de banda"
-./tasa.sh traza.pcap | awk 'BEGIN{printf("Intervalo\tAncho\n");} {printf("%d\t\t%d\n", NR, $1);}'
+./ej4.sh traza.pcap anchos.txt
 
 #Calculemos el tiempo entre paquetes
-echo
-echo "Calculo de las frecuencias de los tiempos de separacion entre paquetes"
-echo "Tiempo        Frecuencia"
-./times.sh times.tmp
+
