@@ -3,5 +3,5 @@
 
 echo "-----------------------------"
 echo "Limpiando archivos temporales..."
-rm -f ipfile allfile ipsrcfile.tmp ipdstfile.tmp tcpdstfile.tmp tcpsrcfile.tmp udpdstfile.tmp udpsrcfile.tmp
+rm -f ipfile allfile *.tmp
 echo "Limpieza completada"

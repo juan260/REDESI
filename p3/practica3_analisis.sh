@@ -20,6 +20,7 @@ then
 fi
 
 
+
 if ! [ -e udpsrcfile.tmp ]
 then
     tshark -r traza.pcap -T fields -e udp.srcport -e frame.len -Y '(eth.type == 0x0800 or (eth.type == 0x8100 and vlan.etype == 0x0800)) and ip.proto == 0x11' > udpsrcfile.tmp
@@ -56,14 +57,12 @@ then
 tshark -r traza.pcap -T fields -e eth.type  > allfile
 fi
 
-if ! [ -e times.tmp ]
-then
-tshark -r traza.pcap -T fields -e frame.time_delta > times.tmp
-fi
 
 chmod u+x chmod.sh
 ./chmod.sh
 
+echo "Archivos generados"
+echo
 ./ej1.sh $STDPREC
 echo
 #Calculemos el top de direcciones Ip origen
@@ -84,8 +83,16 @@ echo
 #Calculemos el top de puertos UDP destino
 ./ej2.sh udpdstfile.tmp "puertos UDP destino" "Puerto"
 
+echo "Ej3"
+./ej3.sh
+
+echo
+echo "Ej4"
 #Calculemos las tasas
 ./ej4.sh traza.pcap anchos.txt
 
+echo 
+echo "Ej5"
 #Calculemos el tiempo entre paquetes
-
+./ej5.sh
+echo
