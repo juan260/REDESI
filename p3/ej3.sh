@@ -7,7 +7,8 @@ tshark -r traza.pcap -T fields -e frame.len -Y 'eth.src == 00:11:88:cc:33:21' > 
 
 fi
 
-./ecdf.sh macsrcfile.tmp 
+./ecdf.sh macsrcfile.tmp > graficamacsrc.tmp
+./grafica.sh 
 
 #MAC destino
 if ! [ -e macdstfile.tmp ]
@@ -16,7 +17,7 @@ tshark -r traza.pcap -T fields -e frame.len -Y 'eth.dst == 00:11:88:cc:33:21' > 
 
 fi
 
-#./ecdf.sh macdstfile.tmp
+#./ecdf.sh macdstfile.tmp > graficamacdst.tmp
 
 #HTTP origen
 if ! [ -e httpsrcfile.tmp ]
@@ -25,7 +26,7 @@ tshark -r traza.pcap -T fields -e ip.len -Y 'tcp.srcport == 80' > httpsrcfile.tm
 
 fi
 
-#./ecdf.sh httpsrcfile.tmp
+#./ecdf.sh httpsrcfile.tmp > graficahttpsrc.tmp
 
 #HTTP destino
 if ! [ -e httpdstfile.tmp ]
@@ -35,7 +36,7 @@ tshark -r traza.pcap -T fields -e ip.len -Y 'tcp.dstport == 80' > httpdstfile.tm
 fi
 
 
-#./ecdf.sh httpdstfile.tmp
+#./ecdf.sh httpdstfile.tmp > graficahttpdst.tmp
 
 #DNS origen
 if ! [ -e dnssrcfile.tmp ]
@@ -44,7 +45,7 @@ tshark -r traza.pcap -T fields -e ip.len -Y 'udp.srcport == 53' > dnssrcfile.tmp
 
 fi
 
-#./ecdf.sh dnssrcfile.tmp
+#./ecdf.sh dnssrcfile.tmp > graficadnssrc.tmp
 
 #DNS destino
 if ! [ -e dnsdstfile.tmp ]
@@ -53,5 +54,5 @@ tshark -r traza.pcap -T fields -e ip.len -Y 'udp.dstport == 53' > dnsdstfile.tmp
 
 fi
 
-#./ecdf.sh dnsdstfile.tmp
+#./ecdf.sh dnsdstfile.tmp > graficadnsdst.tmp
 
