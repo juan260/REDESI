@@ -10,4 +10,4 @@ chmod u+x ecdf.sh
 chmod u+x times.sh
 chmod u+x clean.sh
 chmod u+x tasa.sh
-
+chmod u+x grafica.sh

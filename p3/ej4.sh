@@ -4,7 +4,26 @@
 echo
 echo "Calculo de los anchos de banda"
 
-./tasa.sh $1 | awk '{printf("%d\t\t%d\n", NR, $1);}' > $2
+
+
+#Analiza la tasa o ancho de banda de la traza que recibe como argumento en bits
+
+if ! [ -e tasasin.tmp ]
+then
+tshark -r $1 -qz io,stat,1,"SUM(frame.len)frame.len&&eth.dst==00:11:88:CC:33:21" > tasasin.tmp
+fi
+
+if ! [ -e tasasout.tmp ]
+then
+tshark -r $1 -qz io,stat,1,"SUM(frame.len)frame.len&&eth.src==00:11:88:CC:33:21" > tasasout.tmp
+fi
+
+sed "1,12d" tasasin.tmp |awk '{print $6*8}'| awk '{printf("%d\t\t%d\n", NR, $1);}' > datostasain.tmp
+
+
+sed "1,12d" tasasout.tmp |awk '{print $6*8}'| awk '{printf("%d\t\t%d\n", NR, $1);}' > datostasaout.tmp
+
+rm -f datostasaout.tmp datostasain.tmp
 #./tasa.sh traza.pcap | awk 'BEGIN{printf("Intervalo\tAncho\n");} {printf("%d\t\t%d\n", NR, $1);}'
 
 

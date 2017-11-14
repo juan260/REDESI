@@ -3,6 +3,6 @@
 
 echo
 echo "Calculo de las frecuencias de los tiempos de separacion entre paquetes"
-./ecdf.sh $1  |./ecdf.sh > resultadoEj5.tmp
+./ecdf.sh $1 > resultadoEj5.tmp
 
 
