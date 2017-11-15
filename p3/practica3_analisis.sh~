@@ -97,9 +97,7 @@ echo "Ej5"
 ./ej5.sh
 echo
 
-if ! [ $# == 0 ]
-		then
-		echo "Modo de conservacion activado, conservando archivos temporales"
-else	
-	./clean.sh
+if ! [ $1 -eq "-c" ]
+then
+echo "Modo de conservacion desactivado"
 fi

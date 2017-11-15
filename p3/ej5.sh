@@ -38,7 +38,7 @@ fi
 ./grafica.sh "ECDF de los tiempos de separacion entre paquetes UDP de entrada" "Tiempo (seg)" "Probabilidad" resultadoEj5.tmp graficaTiempoUDPIn.jpeg
 
 ./ecdf.sh timeudpout.tmp > resultadoEj5.tmp
-
+cat resultadoEj5.tmp
 ./grafica.sh "ECDF de los tiempos de separacion entre paquetes UDP de salida" "Tiempo (seg)" "Probabilidad" resultadoEj5.tmp graficaTiempoUDPOut.jpeg
 
 rm resultadoEj5.tmp
