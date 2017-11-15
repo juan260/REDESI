@@ -5,11 +5,12 @@
 #       -Nombre del eje Y
 #       -Nombre del archivo de entrada
 #       -Nombre del archivo de salida
+#	-Nombre de la linea
 
 if [ -s $4 ]
 then
 	echo "Generando grafica $1"
-        gnuplot -persist -e "set title \"$1\"; set xlabel \"$2\"; set ylabel \"$3\";" -e "set term jpeg; set output \"$5\"; plot \"$4\" using 1:2 with lines;"
+        gnuplot -persist -e "set title \"$1\"; set xlabel \"$2\"; set ylabel \"$3\";" -e "set term jpeg; set output \"$5\"; plot \"$4\" using 1:2 title \"$6\" with lines;"
 
 else
         echo

@@ -5,6 +5,6 @@ echo
 echo "Modo se conservacion desactivado eliminando archivos temporales"
 echo "-----------------------------"
 echo "Limpiando archivos temporales..."
-#rm -f ipfile allfile *.tmp
+rm -f ipfile allfile *.tmp
 echo "Limpieza completada"
 echo

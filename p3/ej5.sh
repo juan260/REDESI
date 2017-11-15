@@ -26,19 +26,19 @@ fi
 
 ./ecdf.sh timeipin.tmp > resultadoEj5.tmp
 
-./grafica.sh "ECDF de los tiempos de separacion entre paquetes TCP de entrada" "Tiempo (seg)" "Probabilidad" resultadoEj5.tmp graficaTiempoTCPIn.jpeg
+./grafica.sh "ECDF de los tiempos de separacion entre paquetes TCP de entrada" "Tiempo (seg)" "Probabilidad" resultadoEj5.tmp graficaTiempoTCPIn.jpeg "Tiempo"
 
 
 ./ecdf.sh timeipout.tmp > resultadoEj5.tmp
 
-./grafica.sh "ECDF de los tiempos de separacion entre paquetes TCP de salida" "Tiempo (seg)" "Probabilidad" resultadoEj5.tmp graficaTiempoTCPOut.jpeg
+./grafica.sh "ECDF de los tiempos de separacion entre paquetes TCP de salida" "Tiempo (seg)" "Probabilidad" resultadoEj5.tmp graficaTiempoTCPOut.jpeg "Tiempo"
 
 ./ecdf.sh timeudpin.tmp > resultadoEj5.tmp
 
-./grafica.sh "ECDF de los tiempos de separacion entre paquetes UDP de entrada" "Tiempo (seg)" "Probabilidad" resultadoEj5.tmp graficaTiempoUDPIn.jpeg
+./grafica.sh "ECDF de los tiempos de separacion entre paquetes UDP de entrada" "Tiempo (seg)" "Probabilidad" resultadoEj5.tmp graficaTiempoUDPIn.jpeg "Tiempo"
 
 ./ecdf.sh timeudpout.tmp > resultadoEj5.tmp
 cat resultadoEj5.tmp
-./grafica.sh "ECDF de los tiempos de separacion entre paquetes UDP de salida" "Tiempo (seg)" "Probabilidad" resultadoEj5.tmp graficaTiempoUDPOut.jpeg
+./grafica.sh "ECDF de los tiempos de separacion entre paquetes UDP de salida" "Tiempo (seg)" "Probabilidad" resultadoEj5.tmp graficaTiempoUDPOut.jpeg "Tiempo"
 
 rm resultadoEj5.tmp
