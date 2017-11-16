@@ -4,24 +4,24 @@
 
 if ! [ -e timeipin.tmp ]
 then
-tshark -r traza.pcap -T fields -e frame.time_delta -Y 'tcp&&ip.dst==46.69.107.96' > timeipin.tmp
+tshark -r traza.pcap -T fields -e frame.time_delta_displayed -Y 'tcp&&ip.dst==46.69.107.96' > timeipin.tmp
 fi
 
 
 if ! [ -e timeipout.tmp ]
 then
-tshark -r traza.pcap -T fields -e frame.time_delta -Y 'tcp&&ip.src==46.69.107.96' > timeipout.tmp
+tshark -r traza.pcap -T fields -e frame.time_delta_displayed -Y 'tcp&&ip.src==46.69.107.96' > timeipout.tmp
 fi
 
 
 if ! [ -e timeudpin.tmp ]
 then
-tshark -r traza.pcap -T fields -e frame.time_delta -Y 'udp.dstport==42089' > timeudpin.tmp
+tshark -r traza.pcap -T fields -e frame.time_delta_displayed -Y 'udp.dstport==42089' > timeudpin.tmp
 fi
 
 if ! [ -e timeudpout.tmp ]
 then
-tshark -r traza.pcap -T fields -e frame.time_delta -Y 'udp.srcport==42089' > timeudpout.tmp
+tshark -r traza.pcap -T fields -e frame.time_delta_displayed -Y 'udp.srcport==42089' > timeudpout.tmp
 fi
 
 ./ecdf.sh timeipin.tmp > resultadoEj5.tmp
