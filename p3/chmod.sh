@@ -8,3 +8,4 @@ chmod u+x ej5.sh
 chmod u+x ecdf.sh
 chmod u+x clean.sh
 chmod u+x grafica.sh
+chmod u+x graficaBars.sh

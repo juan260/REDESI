@@ -4,13 +4,13 @@
 
 if ! [ -e timeipin.tmp ]
 then
-tshark -r traza.pcap -T fields -e frame.time_delta -Y 'ip.dst==46.69.107.96' > timeipin.tmp
+tshark -r traza.pcap -T fields -e frame.time_delta -Y 'tcp&&ip.dst==46.69.107.96' > timeipin.tmp
 fi
 
 
 if ! [ -e timeipout.tmp ]
 then
-tshark -r traza.pcap -T fields -e frame.time_delta -Y 'ip.src==46.69.107.96' > timeipout.tmp
+tshark -r traza.pcap -T fields -e frame.time_delta -Y 'tcp&&ip.src==46.69.107.96' > timeipout.tmp
 fi
 
 

@@ -1,4 +1,6 @@
 Autores: Claudia Cea Tassel y Juan Riera Gomez
+Pareja 05
+Grupo 1301
 
 Comentarios:
 
@@ -48,7 +50,8 @@ tenemos:
 
 	
 	-Grafica.sh: script que recibe una serie de argumentos y genera una grafica.
-		
+    -GraficaBars.sh: script con la misma funcionalidad que grafica.sh,
+        pero que grafica con "boxes" en vez de con "lines"
 	-ecdf.sh: recibe un archivo como argumento y genera una ecdf a partir de el.
 
 Muchas de estas descripciones se detallan mejor en las cabeceras de los distintos scripts
