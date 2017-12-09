@@ -278,11 +278,11 @@ uint8_t moduloIP(uint8_t* segmento, uint64_t longitud, uint16_t* pila_protocolos
 	uint8_t aux8;
     uint16_t MTU;
     int i;
-	uint32_t pos=0,pos_control=0;
+	uint32_t pos=0,pos_control=0, checksumPos=0;
 	uint8_t IP_origen[IP_ALEN];
 	uint16_t protocolo_superior=pila_protocolos[0];
 	uint16_t protocolo_inferior=pila_protocolos[2];
-    uint16_t fragSize=0;
+    uint16_t fragSize=0,checksum=0;
 	pila_protocolos++;
 	uint8_t mascara[IP_ALEN],IP_rango_origen[IP_ALEN],IP_rango_destino[IP_ALEN],gateway[IP_ALEN];
 
@@ -329,8 +329,7 @@ uint8_t moduloIP(uint8_t* segmento, uint64_t longitud, uint16_t* pila_protocolos
             return ERROR;
         }
     }
-//TODO A implementar el datagrama y fragmentación (en caso contrario, control de tamano)
-//llamada/s a protocolo de nivel inferior [...]
+    
     if(longitud>IP_DATAGRAM_MAX){
         printf("Error: paquete demasiado grande para IP\n");
         return ERROR;
@@ -343,7 +342,48 @@ uint8_t moduloIP(uint8_t* segmento, uint64_t longitud, uint16_t* pila_protocolos
 
 //Hacemos MTU multiplode 8 paraque sea expresable con pos
     fragSize=((MTU-IP_HEAD_LEN)/8)*8;
-    for(i=0;i<longitud/MTU-IP_HEAD_LEN;i++){
+    for(i=0;i<longitud/fragSize;i++){
+        
+        if(construirIP(segmento+pos_control, fragSize, pos_control, protocolo_superior, 
+            IP_origen, IP_destino, protocolo_inferior, pila_protocolos, parametros)==ERROR){
+            printf("Error al construir el paquete IP\n");
+            return ERROR;
+        }
+        pos_control+=fragSize;
+    }
+
+    if(construirIP(segmento+pos_control, longitud%fragSize, pos_control, protocolo_superior, 
+        IP_origen, IP_destino, protocolo_inferior, pila_protocolos, parametros)==ERROR){
+        printf("Error al construir el paquete IP\n");
+        return ERROR;
+    }
+
+    return OK;
+}
+
+/****************************************************************************************
+* Nombre: construirIP 									*
+* Descripcion: Esta funcion implementa la construccion y el envio en si de cada fragmento			*
+* Argumentos: 										*
+*  -segmento: segmento a enviar							*
+*  -longitud: longitud del fragmento a enviar					*
+*  -pos_control: cantidad de datagrama ya enviado (por fragmentos anteriores)						*
+*  -protocolo_superior: protocolo superior a IP			*
+*  -IP_origen: ip de origen (no en orden de red)           *
+*  -IP_destino: ip destino (no en orden de red)           *
+*  -protocolo_inferior: procolo inferior al actual, al que se ve a enviar el paquete            *
+*  -pila_protocolos-parametros: como en la funcion superior
+*  Retorno: OK/ERROR									*
+****************************************************************************************/
+uint8_t construirIP(uint8_t *segmento, uint32_t longitud, uint32_t pos_control, uint16_t protocolo_superior, 
+            uint32_t IP_origen, uint32_t IP_destino, uint16_t protocolo_inferior, uint16_t* pila_protocolos,
+            void *parametros){
+        uint8_t aux8;
+        uint16_t aux16, checksum;
+        uint32_t aux32;
+        uint32_t pos=0, checksumPos=0;
+        
+	    uint8_t datagrama[IP_DATAGRAM_MAX]={0};
         aux8=69;
         memcpy(datagrama+pos,&aux8,sizeof(uint8_t));
         pos+=1;
@@ -352,7 +392,7 @@ uint8_t moduloIP(uint8_t* segmento, uint64_t longitud, uint16_t* pila_protocolos
         memcpy(datagrama+pos,&aux8,sizeof(uint8_t));
         pos+=1;
 
-        aux16=htons(fragSize+MTU);
+        aux16=htons(longitud+IP_HEAD_LEN);
         memcpy(datagram+pos,&aux16,sizeof(uint16_t));
         pos+=2;
         
@@ -361,7 +401,7 @@ uint8_t moduloIP(uint8_t* segmento, uint64_t longitud, uint16_t* pila_protocolos
         ID++;
         pos+=2;
         
-        aux16=htons(8192+pos_control);
+        aux16=htons(8192+(pos_control/8));
         memcpy(datagram+pos,&aux16,sizeof(uint16_t));
         pos+=2;
 
@@ -369,10 +409,35 @@ uint8_t moduloIP(uint8_t* segmento, uint64_t longitud, uint16_t* pila_protocolos
         memcpy(datagram+pos,&aux8,sizeof(uint8_t));
         pos+=1;
 
-        aux8=protocolo_inferior;
+
+        /* PEro si protoclo ocupaba 8 bits fuUuUuUk */
+        aux16=htons(protocolo_inferior);
         memcpy(datagram+pos,&aux8,sizeof(uint8_t));
         pos+=1:
-    }
+    
+        /* Guardamos la posicion del checksum para calcularlo y almacenarlo despues */
+        checksumPos=pos;
+        aux16=htons(0);
+        memcpy(datagrama+pos,&aux16,sizeof(uint16_t));
+        pos+=2;
+
+        aux32=htons(IP_origen);
+        memcpy(datagrama+pos,&aux32,sizeof(uint32_t));
+        pos+=4;
+
+        aux32=htons(IP_destino);
+        memcpy(datagrama+pos, &aux32, sizeof(uint32_t));
+        pos+=4;
+
+        /* Cabecera completa, calculamos checksum, que noos viene dado en orden de red */
+        calcularChecksum(IP_HEAD_LEN, datagrama, &checksum);
+        memcpy(datagrama+checksumPos,&checksum,sizeof(uint16_t));
+
+        /* Por úlimo añadimos el mensaje */
+        memcpy(datagrama+pos,segmento,longitud);
+
+            
+	    return protocolos_registrados[protocolo_inferior](datagrama,longitud+IP_HEAD_LEN,pila_protocolos,parametros);
 }
 
 
