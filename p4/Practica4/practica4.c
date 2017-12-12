@@ -494,13 +494,14 @@ uint8_t construirIP(uint8_t *segmento, uint32_t longitud, uint32_t pos_control, 
 
 uint8_t moduloETH(uint8_t* datagrama, uint64_t longitud, uint16_t* pila_protocolos,void *parametros){
 	uint8_t aux8;
-	uint8_t trama[ETH_FRAME_MAX]={0};
 	uint8_t pos=0;
 	uint8_t ETH_origen[ETH_ALEN];
 	uint16_t aux16;
-    uint16_t protocolo_superior=pila_protocolos[0];
-	int i;
-    pila_protocolos++;
+    	uint16_t protocolo_superior=pila_protocolos[0];
+	int i, res;
+
+    	pila_protocolos++;
+
 	Parametros ipdatos=*((Parametros*)parametros);
 	uint8_t* ETH_destino=ipdatos.ETH_destino;
 
@@ -519,7 +520,6 @@ uint8_t moduloETH(uint8_t* datagrama, uint64_t longitud, uint16_t* pila_protocol
 	/*Direccion ETH destino*/	
 	for(i=0;i<ETH_ALEN;i++){
 		aux8 = ETH_destino[i];
-		trama[i] = aux8;
         	memcpy(datagrama+pos,&aux8,sizeof(uint8_t));
         	pos+=sizeof(uint8_t);	
 	}
@@ -527,7 +527,6 @@ uint8_t moduloETH(uint8_t* datagrama, uint64_t longitud, uint16_t* pila_protocol
 	/*Direccion ETH origen*/
 	for(i=0;i<ETH_ALEN;i++){
 		aux8 = ETH_origen[i];
-		trama[i+ETH_ALEN] = aux8;
         	memcpy(datagrama+pos,&aux8,sizeof(uint8_t));
         	pos+=sizeof(uint8_t);	
 	}
@@ -538,7 +537,15 @@ uint8_t moduloETH(uint8_t* datagrama, uint64_t longitud, uint16_t* pila_protocol
         pos+=sizeof(uint16_t);
 	
 	//Enviar a capa fisica [...]
-	return protocolos_registrados[protocolo_superior](trama,longitud+ETH_HLEN,pila_protocolos,parametros);
+	res = pcap_sendpacket(descr,(u_char*)datagrama, longitud+ETH_HLEN);
+	if(res = 0){
+		return OK;
+	}
+	else{
+		return ERROR;
+	}
+
+	return OK;
 
 }
 
