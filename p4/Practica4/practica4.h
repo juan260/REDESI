@@ -75,10 +75,10 @@ typedef struct parametros{
 }Parametros;
 
 /***************************Pila de protocolos a implementar*************************************/
-uint8_t moduloUDP(uint8_t* mensaje, uint16_t* pila_protocolos,uint64_t longitud,void *parametros);
-uint8_t moduloICMP(uint8_t* mensaje, uint16_t* pila_protocolos,uint64_t longitud,void *parametros);
-uint8_t moduloIP(uint8_t* segmento, uint16_t* pila_protocolos,uint64_t longitud,void *parametros);
-uint8_t moduloETH(uint8_t* datagrama, uint16_t* pila_protocolos,uint64_t longitud,void *parametros);
+uint8_t moduloUDP(uint8_t* mensaje,uint64_t longitud, uint16_t* pila_protocolos,void *parametros);
+uint8_t moduloICMP(uint8_t* mensaje, uint64_t longitud,uint16_t* pila_protocolos,void *parametros);
+uint8_t moduloIP(uint8_t* segmento, uint64_t longitud,uint16_t* pila_protocolos,void *parametros);
+uint8_t moduloETH(uint8_t* datagrama,uint64_t longitud, uint16_t* pila_protocolos,void *parametros);
 
 /***************************Funcion enviar trafico implementada*********************************/
 uint8_t enviar(uint8_t* mensaje,uint64_t longitud,uint16_t* pila_protocolos,void *parametros);
