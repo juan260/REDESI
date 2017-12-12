@@ -227,7 +227,7 @@ uint8_t enviar(uint8_t* mensaje, uint64_t longitud,uint16_t* pila_protocolos,voi
 }
 
 
-/***************************TODO Pila de protocolos a implementar************************************/
+
 
 /****************************************************************************************
 * Nombre: moduloUDP 									*
