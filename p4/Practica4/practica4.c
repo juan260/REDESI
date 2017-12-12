@@ -368,8 +368,10 @@ uint8_t moduloIP(uint8_t* segmento, uint64_t longitud, uint16_t* pila_protocolos
 
 	//Hacemos MTU multiplode 8 paraque sea expresable con pos
     	fragSize=((MTU-IP_HEAD_LEN)/8)*8;
-    	for(i=0;i<longitud/fragSize;i++){
-        
+    	//TODO 
+        printf("\nfragSize, MTU, IP_HEAD_LEN, %d, %d, %d, longitud, %d\n\n", (int)fragSize, (int)MTU, (int)IP_HEAD_LEN, (int)longitud);
+        for(i=0;i<longitud/fragSize;i++){
+            printf("BUCLEEEEEi\n");        
         	if(construirIP(segmento+pos_control, fragSize, pos_control, protocolo_superior, 
             		IP_origen, IP_destino, protocolo_inferior, pila_protocolos, parametros)==ERROR){
             		printf("Error al construir el paquete IP\n");
@@ -503,7 +505,7 @@ uint8_t moduloETH(uint8_t* datagrama, uint64_t longitud, uint16_t* pila_protocol
 	uint8_t* ETH_destino=ipdatos.ETH_destino;
 
 	printf("modulo ETH(fisica) %s %d.\n",__FILE__,__LINE__);	
-
+    printf("\nLongitud: %d\n\n", (int)longitud);
 	if(longitud>ETH_FRAME_MAX){
         	printf("Error: paquete demasiado grande para Ethernet\n");
         	return ERROR;
