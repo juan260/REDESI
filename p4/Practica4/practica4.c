@@ -445,8 +445,8 @@ uint8_t construirIP(uint8_t *segmento, uint32_t longitud, uint32_t pos_control, 
         pos+=sizeof(uint8_t);
 
 
-        aux16=htons(protocolo_inferior);
-        memcpy(datagrama+pos,&aux8,sizeof(uint8_t));
+        aux8=(protocolo_superior);
+        memcpy(datagrama+pos,&(aux8),sizeof(uint8_t));
         pos+=sizeof(uint8_t);
     
         /*Guardamos la posicion del checksum para calcularlo y almacenarlo despues*/
@@ -476,7 +476,8 @@ uint8_t construirIP(uint8_t *segmento, uint32_t longitud, uint32_t pos_control, 
         /*Por úlimo añadimos el mensaje*/
         memcpy(datagrama+pos,segmento,longitud);
 
-            
+            mostrarPaquete(datagrama, longitud+IP_HEAD_LEN);
+printf("\n");
 	return protocolos_registrados[protocolo_inferior](datagrama,longitud+IP_HEAD_LEN,pila_protocolos,parametros);
 }
 
@@ -496,6 +497,7 @@ uint8_t moduloETH(uint8_t* datagrama, uint64_t longitud, uint16_t* pila_protocol
 	uint8_t aux8;
 	uint8_t pos=0;
 	uint8_t ETH_origen[ETH_ALEN];
+	uint8_t trama[ETH_FRAME_MAX];
 	uint16_t aux16;
     	uint16_t protocolo_superior=pila_protocolos[0];
 	int i;
@@ -522,34 +524,40 @@ uint8_t moduloETH(uint8_t* datagrama, uint64_t longitud, uint16_t* pila_protocol
 	for(i=0;i<ETH_ALEN;i++){
 		aux8 = ETH_destino[i];
 		printf("\nETHDESTINO[i]=%d", (int)aux8);
-        	memcpy(datagrama+pos,&aux8,sizeof(uint8_t));
+        	memcpy(trama+pos,&aux8,sizeof(uint8_t));
         	pos+=sizeof(uint8_t);	
 	}
 
 	/*Direccion ETH origen*/
 	for(i=0;i<ETH_ALEN;i++){
 		aux8 = ETH_origen[i];
-        	memcpy(datagrama+pos,&aux8,sizeof(uint8_t));
+        	memcpy(trama+pos,&aux8,sizeof(uint8_t));
         	pos+=sizeof(uint8_t);	
 	}
 
 	/*Tipo Ethernet*/
 	aux16=htons(protocolo_superior);
-    memcpy(datagrama+pos,&aux16,sizeof(uint16_t));
+    memcpy(trama+pos,&aux16,sizeof(uint16_t));
     pos+=sizeof(uint16_t);
 	
+	/*Por úlimo añadimos el mensaje*/
+        memcpy(trama+pos,datagrama,longitud+ETH_HLEN);
+
 	//Enviar a capa fisica [...]
-    if(pcap_sendpacket(descr,(u_char *)datagrama, longitud+ETH_HLEN)!=0){
+    if(pcap_sendpacket(descr,(u_char *)trama, longitud+ETH_HLEN)!=0){
 		return ERROR;
 	}
     printf("Paquete enviado correctamente\n");
+       mostrarPaquete(trama, longitud+ETH_HLEN);
+printf("\n");
+	
     gettimeofday(&time, NULL);
     pkt_header->ts.tv_sec=time.tv_sec;
     pkt_header->ts.tv_usec=time.tv_usec;
     pkt_header->len=longitud+ETH_HLEN;
     pkt_header->caplen=longitud+ETH_HLEN;
 
-    pcap_dump((uint8_t *)pdumper,pkt_header,(u_char *)datagrama);
+    pcap_dump((uint8_t *)pdumper,pkt_header,(u_char *)trama);
 
 	return OK;
 
