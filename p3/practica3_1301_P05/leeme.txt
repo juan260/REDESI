@@ -1,0 +1,62 @@
+Autores: Claudia Cea Tassel y Juan Riera Gomez
+Pareja 05
+Grupo 1301
+
+Comentarios:
+
+Para ejecutar esta practica, en primer lugar, debemos dar permisos ar archivo 
+practica3_analisis.sh. Este ya se encarga de dar permisos al resto de scripts
+necesarios para la ejecucion. Despues ejecutaremos practica3_analisis.sh
+que se encarga de lanzar todo el resto de scripts.
+
+Hemos modularizado todo lo posible nuestro diseño de scripts para facilitar 
+su entendimiento y reducir el numero de lineas de codigo. Para aumentar
+el rendimiento, hemos habilitado una opcion en el shell principal,
+que hemos llamado modo de conservacion. Cuando el modo de conservacion esta
+activado, el script no elimina los archivos temporales al final de su 
+ejecucion, de esta manera, si se ejecuta varias veces el script, haciendo 
+cambios en el mismo y no cambiando la traza, no es necesario generar de 
+nuevo todos los archivos temporales, que es lo que más tiempo lleva.
+
+Para habilitar el modo de conservacion, tan solo es necesario ejecutar el
+shell script principal de la practica con cualquier numero de argumentos
+distinto de cero. Por ejemplo:
+
+	./practica3_analisis.sh #Modo de conservacion desactivado
+	./practica3_analisis.sh 1 #Modo se conservacion activado
+	
+Para limpiar los archivos temporales si los hemos generado en modo de
+conservacion, basta con ejecutar el script clean.sh.
+
+A parte de este script principal que se encarga de llamar a los demas
+y el script clean.sh que limpia el directorio de archivos temporales 
+tenemos:
+
+	-Ej1.sh: obtiene el porcentaje de paquetes IP, no IP, UDP, TCP y OTROS.
+
+	-Ej2.sh: imprime el top 10 calculado en numero de paquetes y en byte 
+		en funcion de un archivo de datos de entrada.
+
+	-Ej3.sh: almacena en un ECDF los tamaños de los paquetes leidos, 
+		y grafica el resultado. Este proceso lo ejecuta con los 
+		distintos flujos por MAC, HTTP y DNS. Para cada uno de estos
+		analiza el trafico cada sentido.
+
+	-Ej4.sh: recibe como argumento el nombre de la traza y devuelve los 
+		anchos de banda graficados separados por sentido
+
+	-Ej5.sh: calcula el tiempo de separacion entre paquetes, por flujo y
+		sentido, y lo guarda en un ECDF que grafica.
+
+	
+	-Grafica.sh: script que recibe una serie de argumentos y genera una grafica.
+    
+    -GraficaBars.sh: script con la misma funcionalidad que grafica.sh,
+        pero que grafica con "boxes" en vez de con "lines"
+	
+    -ecdf.sh: recibe un archivo como argumento y genera una ecdf a partir de el.
+    
+    -GraficaLog.sh: script con la misma funcionalidad que grafica.sh,
+        pero que grafica con escala logaritmica para el eje X
+
+Muchas de estas descripciones se detallan mejor en las cabeceras de los distintos scripts

@@ -14,7 +14,8 @@ Compila con warning pues falta usar variables y modificar funciones
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-
+#include <pcap/pcap.h>
+#include <sys/time.h>
 #include "interface.h"
 #include "practica4.h"
 
@@ -24,7 +25,7 @@ pcap_dumper_t * pdumper;//y salida a pcap
 uint64_t cont=0;	//Contador numero de mensajes enviados
 char interface[10];	//Interface donde transmitir por ejemplo "eth0"
 uint16_t ID=1;		//Identificador IP
-
+uint16_t sec = 0;
 
 void handleSignal(int nsignal){
 	printf("Control C pulsado (%"PRIu64")\n", cont);
@@ -498,9 +499,10 @@ uint8_t moduloETH(uint8_t* datagrama, uint64_t longitud, uint16_t* pila_protocol
 	uint8_t ETH_origen[ETH_ALEN];
 	uint16_t aux16;
     	uint16_t protocolo_superior=pila_protocolos[0];
-	int i, res;
-
-    	pila_protocolos++;
+	int i;
+    struct pcap_pkthdr pkt_header[1];
+    struct timeval time;
+    pila_protocolos++;
 
 	Parametros ipdatos=*((Parametros*)parametros);
 	uint8_t* ETH_destino=ipdatos.ETH_destino;
@@ -533,17 +535,21 @@ uint8_t moduloETH(uint8_t* datagrama, uint64_t longitud, uint16_t* pila_protocol
 
 	/*Tipo Ethernet*/
 	aux16=htons(protocolo_superior);
-        memcpy(datagrama+pos,&aux16,sizeof(uint16_t));
-        pos+=sizeof(uint16_t);
+    memcpy(datagrama+pos,&aux16,sizeof(uint16_t));
+    pos+=sizeof(uint16_t);
 	
 	//Enviar a capa fisica [...]
-	res = pcap_sendpacket(descr,(u_char*)datagrama, longitud+ETH_HLEN);
-	if(res = 0){
-		return OK;
-	}
-	else{
+    if(pcap_sendpacket(descr,(u_char *)datagrama, longitud+ETH_HLEN)!=0){
 		return ERROR;
 	}
+    printf("Paquete enviado correctamente\n");
+    gettimeofday(&time, NULL);
+    pkt_header->ts.tv_sec=time.tv_sec;
+    pkt_header->ts.tv_usec=time.tv_usec;
+    pkt_header->len=longitud+ETH_HLEN;
+    pkt_header->caplen=longitud+ETH_HLEN;
+
+    pcap_dump((uint8_t *)pdumper,pkt_header,(u_char *)datagrama);
 
 	return OK;
 
@@ -567,6 +573,8 @@ uint8_t moduloICMP(uint8_t* mensaje,uint64_t longitud, uint16_t* pila_protocolos
 	uint8_t datagrama[ICMP_DATAGRAM_MAX]={0};
 	uint16_t protocolo_inferior=pila_protocolos[2];
 	pila_protocolos++;
+
+    
     printf("modulo ICMP %s %d.\n",__FILE__,__LINE__);
 
 	if(longitud>ICMP_DATAGRAM_MAX){
@@ -591,15 +599,16 @@ uint8_t moduloICMP(uint8_t* mensaje,uint64_t longitud, uint16_t* pila_protocolos
 	pos+=sizeof(uint16_t);
 
 	/*Identificador*/
-	aux16=htons(ICMP_PROTO);
+	aux16=htons(0);
 	memcpy(datagrama+pos,&aux16,sizeof(uint16_t));
 	pos+=sizeof(uint16_t);
 
 	/*Numero de secuencia*/
-	aux16=htons(0);
+	aux16=htons(sec);
         memcpy(datagrama+pos,&aux16,sizeof(uint16_t));
 	pos+=sizeof(uint16_t);
-
+    sec++;
+    
 	/*Datos*/
 	memcpy(datagrama+pos,mensaje,longitud);
 
