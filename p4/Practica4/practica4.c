@@ -374,7 +374,7 @@ uint8_t moduloIP(uint8_t* segmento, uint64_t longitud, uint16_t* pila_protocolos
         for(i=0;i<longitud/fragSize;i++){
             printf("BUCLEEEEEi\n");        
         	if(construirIP(segmento+pos_control, fragSize, pos_control, protocolo_superior, 
-            		IP_origen, IP_destino, protocolo_inferior, pila_protocolos, parametros)==ERROR){
+            		IP_origen, IP_destino, protocolo_inferior, pila_protocolos, &ipdatos)==ERROR){
             		printf("Error al construir el paquete IP\n");
             		return ERROR;
         	}
@@ -382,7 +382,7 @@ uint8_t moduloIP(uint8_t* segmento, uint64_t longitud, uint16_t* pila_protocolos
     	}
 
     	if(construirIP(segmento+pos_control, longitud%fragSize, pos_control, protocolo_superior, 
-        IP_origen, IP_destino, protocolo_inferior, pila_protocolos, parametros)==ERROR){
+        IP_origen, IP_destino, protocolo_inferior, pila_protocolos, &ipdatos)==ERROR){
         	printf("Error al construir el paquete IP\n");
         	return ERROR;
     	}
@@ -445,7 +445,6 @@ uint8_t construirIP(uint8_t *segmento, uint32_t longitud, uint32_t pos_control, 
         pos+=sizeof(uint8_t);
 
 
-        /* PEro si protoclo ocupaba 8 bits fuUuUuUk */
         aux16=htons(protocolo_inferior);
         memcpy(datagrama+pos,&aux8,sizeof(uint8_t));
         pos+=sizeof(uint8_t);
@@ -522,6 +521,7 @@ uint8_t moduloETH(uint8_t* datagrama, uint64_t longitud, uint16_t* pila_protocol
 	/*Direccion ETH destino*/	
 	for(i=0;i<ETH_ALEN;i++){
 		aux8 = ETH_destino[i];
+		printf("\nETHDESTINO[i]=%d", (int)aux8);
         	memcpy(datagrama+pos,&aux8,sizeof(uint8_t));
         	pos+=sizeof(uint8_t);	
 	}
@@ -572,6 +572,11 @@ uint8_t moduloICMP(uint8_t* mensaje,uint64_t longitud, uint16_t* pila_protocolos
 	uint16_t aux16, pos=0, checksumPos;
 	uint8_t datagrama[ICMP_DATAGRAM_MAX]={0};
 	uint16_t protocolo_inferior=pila_protocolos[2];
+	uint8_t IP_origen[IP_ALEN];
+	uint8_t gateway[IP_ALEN];
+	uint8_t mascara[IP_ALEN];
+	uint8_t IP_rango_origen[IP_ALEN];
+	uint8_t IP_rango_destino[IP_ALEN];
 	pila_protocolos++;
 
     
@@ -580,6 +585,48 @@ uint8_t moduloICMP(uint8_t* mensaje,uint64_t longitud, uint16_t* pila_protocolos
 	if(longitud>ICMP_DATAGRAM_MAX){
         	printf("Error: paquete demasiado grande para ICMP\n");
         	return ERROR;
+    	}
+	
+	Parametros ipdatos=*((Parametros*)parametros);
+	uint8_t* IP_destino=ipdatos.IP_destino;
+    	if(obtenerIPInterface(interface, IP_origen)==ERROR){
+        	printf("Error al obtener la ip de origen\n");
+        	return ERROR;
+    	}
+    
+    	if(obtenerMascaraInterface(interface, mascara)==ERROR){
+        	printf("Error al obtener la mascara\n");
+        	return ERROR;
+    	}
+
+    	if(aplicarMascara(IP_origen, mascara, IP_ALEN, IP_rango_origen) == ERROR){
+        	printf("Error al aplicar la mascara de destino\n");
+        	return ERROR;
+    	}
+        
+    	if(aplicarMascara(IP_destino, mascara, IP_ALEN, IP_rango_destino) == ERROR){
+        	printf("Error al aplicar la mascara de destino\n");
+        	return ERROR;
+    	}
+    
+    
+    	if(IP_rango_destino==IP_rango_origen){
+        	/* Esta en la misma red local */
+        	if(ARPrequest(interface, IP_destino,(ipdatos.ETH_destino))==ERROR){
+            		printf("Error al hacer ARPrequest\n");
+            		return ERROR;
+        	}
+    	} else {
+        	/* Esta en distinta red local, usar gateway */
+        	if(obtenerGateway(interface, gateway)==ERROR){
+            		printf("Error al obtener gateway\n");
+            		return ERROR;
+        	}
+
+        	if(ARPrequest(interface, gateway,(ipdatos.ETH_destino))==ERROR){
+            		printf("Error al hacer ARPrequest al gateway\n");
+            		return ERROR;
+        	}
     	}
 
 	/*Tipo*/	
@@ -616,7 +663,7 @@ uint8_t moduloICMP(uint8_t* mensaje,uint64_t longitud, uint16_t* pila_protocolos
         calcularChecksum(ICMP_HLEN+longitud, datagrama, checksum);
         memcpy(datagrama+checksumPos,checksum,sizeof(uint16_t));
 
-	return protocolos_registrados[protocolo_inferior](datagrama,longitud+ICMP_HLEN,pila_protocolos,parametros);
+	return protocolos_registrados[protocolo_inferior](datagrama,longitud+ICMP_HLEN,pila_protocolos,&ipdatos);
 
 }
 
