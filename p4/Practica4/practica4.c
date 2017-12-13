@@ -338,9 +338,13 @@ uint8_t moduloIP(uint8_t* segmento, uint64_t longitud, uint16_t* pila_protocolos
     	}
     
     
-    	if(IP_rango_destino==IP_rango_origen){
+    	if(IP_rango_destino[0]==IP_rango_origen[0]&&
+		IP_rango_destino[1]==IP_rango_origen[1]&&
+		IP_rango_destino[2]==IP_rango_origen[2]&&
+		IP_rango_destino[3]==IP_rango_origen[3]){
         	/* Esta en la misma red local */
-        	if(ARPrequest(interface, IP_destino,(ipdatos.ETH_destino))==ERROR){
+
+        	if(ARPrequest(interface,IP_destino,(ipdatos.ETH_destino))==ERROR){
             		printf("Error al hacer ARPrequest\n");
             		return ERROR;
         	}
@@ -431,7 +435,6 @@ uint8_t construirIP(uint8_t *segmento, uint32_t longitud, uint32_t pos_control, 
 	/*Identificacion*/
         aux16=htons(ID);
         memcpy(datagrama+pos,&aux16,sizeof(uint16_t));
-        ID++;
         pos+=sizeof(uint16_t);
         
 	/*Flags, posicion*/
@@ -453,7 +456,7 @@ uint8_t construirIP(uint8_t *segmento, uint32_t longitud, uint32_t pos_control, 
         checksumPos=pos;
         aux16=htons(0);
         memcpy(datagrama+pos,&aux16,sizeof(uint16_t));
-        pos+=sizeof(uint8_t);
+        pos+=sizeof(uint16_t);
 
 	/*IP origen*/
         for(i=0;i<IP_ALEN;i++){
