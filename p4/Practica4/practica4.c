@@ -186,7 +186,7 @@ int main(int argc, char **argv){
 	printf("Enviado mensaje %"PRIu64", almacenado en %s\n\n\n", cont,fichero_pcap_destino);
 
 		//Luego, un paquete ICMP en concreto un ping
-	pila_protocolos[0]=ICMP_PROTO; pila_protocolos[1]=IP_PROTO; pila_protocolos[2]=0;
+	pila_protocolos[0]=ICMP_PROTO; pila_protocolos[1]=IP_PROTO; pila_protocolos[2]=ETH_PROTO;
 	Parametros parametros_icmp; parametros_icmp.tipo=PING_TIPO; parametros_icmp.codigo=PING_CODE; memcpy(parametros_icmp.IP_destino,IP_destino_red,IP_ALEN);
 	if(enviar((uint8_t*)"Probando a hacer un ping",strlen("Probando a hacer un ping"),pila_protocolos,&parametros_icmp)==ERROR ){
 		printf("Error: enviar(): %s %s %d.\n",errbuf,__FILE__,__LINE__);
@@ -582,13 +582,7 @@ uint8_t moduloICMP(uint8_t* mensaje,uint64_t longitud, uint16_t* pila_protocolos
 	uint8_t aux8, checksum[2];
 	uint16_t aux16, pos=0, checksumPos;
 	uint8_t datagrama[ICMP_DATAGRAM_MAX]={0};
-	uint16_t protocolo_inferior=pila_protocolos[2];
-	uint8_t IP_origen[IP_ALEN];
-	uint8_t gateway[IP_ALEN];
-	uint8_t mascara[IP_ALEN];
-	uint8_t IP_rango_origen[IP_ALEN];
-	uint8_t IP_rango_destino[IP_ALEN];
-	pila_protocolos++;
+	uint16_t protocolo_inferior=pila_protocolos[1];
 
     
     printf("modulo ICMP %s %d.\n",__FILE__,__LINE__);
@@ -599,46 +593,6 @@ uint8_t moduloICMP(uint8_t* mensaje,uint64_t longitud, uint16_t* pila_protocolos
     	}
 	
 	Parametros ipdatos=*((Parametros*)parametros);
-	uint8_t* IP_destino=ipdatos.IP_destino;
-    	if(obtenerIPInterface(interface, IP_origen)==ERROR){
-        	printf("Error al obtener la ip de origen\n");
-        	return ERROR;
-    	}
-    
-    	if(obtenerMascaraInterface(interface, mascara)==ERROR){
-        	printf("Error al obtener la mascara\n");
-        	return ERROR;
-    	}
-
-    	if(aplicarMascara(IP_origen, mascara, IP_ALEN, IP_rango_origen) == ERROR){
-        	printf("Error al aplicar la mascara de destino\n");
-        	return ERROR;
-    	}
-        
-    	if(aplicarMascara(IP_destino, mascara, IP_ALEN, IP_rango_destino) == ERROR){
-        	printf("Error al aplicar la mascara de destino\n");
-        	return ERROR;
-    	}
-    
-    
-    	if(IP_rango_destino==IP_rango_origen){
-        	/* Esta en la misma red local */
-        	if(ARPrequest(interface, IP_destino,(ipdatos.ETH_destino))==ERROR){
-            		printf("Error al hacer ARPrequest\n");
-            		return ERROR;
-        	}
-    	} else {
-        	/* Esta en distinta red local, usar gateway */
-        	if(obtenerGateway(interface, gateway)==ERROR){
-            		printf("Error al obtener gateway\n");
-            		return ERROR;
-        	}
-
-        	if(ARPrequest(interface, gateway,(ipdatos.ETH_destino))==ERROR){
-            		printf("Error al hacer ARPrequest al gateway\n");
-            		return ERROR;
-        	}
-    	}
 
 	/*Tipo*/	
 	aux8 = 8;
