@@ -112,7 +112,10 @@ int main(int argc, char **argv){
                         return ERROR;
                    } else if(size%2==1){
                         sprintf(data, "%s ", data); //Deben de ser pares!!
+			size++;
                    }
+			data[size]=0;
+			printf("Tamaño del fichero: %d\n", strlen(data));
                    if(close(file)==-1){
                         printf("Error al cerrar el fichero\n");
                    }
@@ -337,17 +340,13 @@ uint8_t moduloIP(uint8_t* segmento, uint64_t longitud, uint16_t* pila_protocolos
         	return ERROR;
     	}
     
-    	
-	for(i=0;i<4;i++){
-		printf("\n%d %d\n", IP_rango_destino[i], IP_rango_origen[i]);
-	}
 
     	if(IP_rango_destino[0]==IP_rango_origen[0]&&
 		IP_rango_destino[1]==IP_rango_origen[1]&&
 		IP_rango_destino[2]==IP_rango_origen[2]&&
 		IP_rango_destino[3]==IP_rango_origen[3]){
         	/* Esta en la misma red local */
-		printf("La direccion estaen mi subred\n");
+		printf("La direccion esta en mi subred.\n");
         	if(ARPrequest(interface,IP_destino,(ipdatos.ETH_destino))==ERROR){
             		printf("Error al hacer ARPrequest\n");
             		return ERROR;
@@ -376,12 +375,14 @@ uint8_t moduloIP(uint8_t* segmento, uint64_t longitud, uint16_t* pila_protocolos
         	return ERROR;
     	}
 
+	MTU=40;
+
 	//Hacemos MTU multiplode 8 paraque sea expresable con pos
-    	fragSize=((MTU-IP_HEAD_LEN)/8)*8;
+    	fragSize=((MTU-IP_HEAD_LEN-1)/8)*8;
     	//TODO 
         printf("\nfragSize, MTU, IP_HEAD_LEN, %d, %d, %d, longitud, %d\n\n", (int)fragSize, (int)MTU, (int)IP_HEAD_LEN, (int)longitud);
         for(i=0;i<longitud/fragSize;i++){
-            printf("BUCLEEEEEi\n");        
+            printf("Enviando fragmento %d\n", i);        
         	if(construirIP(segmento+pos_control, fragSize, pos_control, protocolo_superior, 
             		IP_origen, IP_destino, protocolo_inferior, pila_protocolos, &ipdatos,1)==ERROR){
             		printf("Error al construir el paquete IP\n");
@@ -389,6 +390,8 @@ uint8_t moduloIP(uint8_t* segmento, uint64_t longitud, uint16_t* pila_protocolos
         	}
         	pos_control+=fragSize;
     	}
+	
+	printf("Enviando ultimo fragmento.\n");	
 
     	if(construirIP(segmento+pos_control, longitud%fragSize, pos_control, protocolo_superior, 
         IP_origen, IP_destino, protocolo_inferior, pila_protocolos, &ipdatos, 0)==ERROR){
@@ -421,7 +424,7 @@ uint8_t construirIP(uint8_t *segmento, uint32_t longitud, uint32_t pos_control, 
         uint32_t pos=0, checksumPos=0;
 	    uint8_t datagrama[IP_DATAGRAM_MAX]={0};
         int i;
-    
+    	
 	/*Version 4, IHL 5*/
         aux8=69;
         memcpy(datagrama+pos,&aux8,sizeof(uint8_t));
@@ -436,18 +439,19 @@ uint8_t construirIP(uint8_t *segmento, uint32_t longitud, uint32_t pos_control, 
         aux16=htons(longitud+IP_HEAD_LEN);
         memcpy(datagrama+pos,&aux16,sizeof(uint16_t));
         pos+=sizeof(uint16_t);
-        
+
 	/*Identificacion*/
         aux16=htons(ID);
         memcpy(datagrama+pos,&aux16,sizeof(uint16_t));
         pos+=sizeof(uint16_t);
-        
+
 	/*Flags, posicion*/
 	if(morefrag==1){
         	aux16=htons(8192+(pos_control/8)); 
 	} else {
 		aux16=htons((pos_control/8));
 	}
+
         memcpy(datagrama+pos,&aux16,sizeof(uint16_t));
         pos+=sizeof(uint16_t);
 
@@ -460,7 +464,7 @@ uint8_t construirIP(uint8_t *segmento, uint32_t longitud, uint32_t pos_control, 
         aux8=(protocolo_superior);
         memcpy(datagrama+pos,&(aux8),sizeof(uint8_t));
         pos+=sizeof(uint8_t);
-    
+
         /*Guardamos la posicion del checksum para calcularlo y almacenarlo despues*/
         checksumPos=pos;
         aux16=htons(0);
@@ -488,7 +492,6 @@ uint8_t construirIP(uint8_t *segmento, uint32_t longitud, uint32_t pos_control, 
         /*Por úlimo añadimos el mensaje*/
         memcpy(datagrama+pos,segmento,longitud);
 
-            mostrarPaquete(datagrama, longitud+IP_HEAD_LEN);
 printf("\n");
 	return protocolos_registrados[protocolo_inferior](datagrama,longitud+IP_HEAD_LEN,pila_protocolos,parametros);
 }
@@ -535,7 +538,6 @@ uint8_t moduloETH(uint8_t* datagrama, uint64_t longitud, uint16_t* pila_protocol
 	/*Direccion ETH destino*/	
 	for(i=0;i<ETH_ALEN;i++){
 		aux8 = ETH_destino[i];
-		printf("\nETHDESTINO[i]=%d", (int)aux8);
         	memcpy(trama+pos,&aux8,sizeof(uint8_t));
         	pos+=sizeof(uint8_t);	
 	}
@@ -560,7 +562,6 @@ uint8_t moduloETH(uint8_t* datagrama, uint64_t longitud, uint16_t* pila_protocol
 		return ERROR;
 	}
     printf("Paquete enviado correctamente\n");
-       mostrarPaquete(trama, longitud+ETH_HLEN);
 printf("\n");
 	
     gettimeofday(&time, NULL);
@@ -568,9 +569,9 @@ printf("\n");
     pkt_header->ts.tv_usec=time.tv_usec;
     pkt_header->len=longitud+ETH_HLEN;
     pkt_header->caplen=longitud+ETH_HLEN;
-
+	printf("Exportando a archivo pcap...\n");
     pcap_dump((uint8_t *)pdumper,pkt_header,(u_char *)trama);
-
+	printf("Exportacion completa\n");
 	return OK;
 
 }
