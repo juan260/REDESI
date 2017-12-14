@@ -375,10 +375,10 @@ uint8_t moduloIP(uint8_t* segmento, uint64_t longitud, uint16_t* pila_protocolos
         	return ERROR;
     	}
 
-	MTU=40;
+	
 
 	//Hacemos MTU multiplode 8 paraque sea expresable con pos
-    	fragSize=((MTU-IP_HEAD_LEN-1)/8)*8;
+    	fragSize=(((MTU-IP_HEAD_LEN-1)/8)-1)*8;
     	//TODO 
         printf("\nfragSize, MTU, IP_HEAD_LEN, %d, %d, %d, longitud, %d\n\n", (int)fragSize, (int)MTU, (int)IP_HEAD_LEN, (int)longitud);
         for(i=0;i<longitud/fragSize;i++){
