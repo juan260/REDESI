@@ -36,7 +36,7 @@ void handleSignal(int nsignal){
 
 uint8_t construirIP(uint8_t *segmento, uint32_t longitud, uint32_t pos_control, uint16_t protocolo_superior, 
             uint8_t *IP_origen, uint8_t *IP_destino, uint16_t protocolo_inferior, uint16_t* pila_protocolos,
-            void *parametros);
+            void *parametros, int morefrag);
 
 int main(int argc, char **argv){	
 
@@ -273,7 +273,7 @@ uint8_t moduloUDP(uint8_t* mensaje,uint64_t longitud, uint16_t* pila_protocolos,
     	pos+=sizeof(uint16_t);
 
 	/*Longitud*/
-    	uint16_t longitudUDP=longitud+UDP_PROTO;
+    	uint16_t longitudUDP=longitud+UDP_HLEN;
     	aux16=htons(longitudUDP);
     	memcpy(segmento+pos,&aux16,sizeof(uint16_t));
     	pos+=sizeof(uint16_t);
@@ -337,19 +337,24 @@ uint8_t moduloIP(uint8_t* segmento, uint64_t longitud, uint16_t* pila_protocolos
         	return ERROR;
     	}
     
-    
+    	
+	for(i=0;i<4;i++){
+		printf("\n%d %d\n", IP_rango_destino[i], IP_rango_origen[i]);
+	}
+
     	if(IP_rango_destino[0]==IP_rango_origen[0]&&
 		IP_rango_destino[1]==IP_rango_origen[1]&&
 		IP_rango_destino[2]==IP_rango_origen[2]&&
 		IP_rango_destino[3]==IP_rango_origen[3]){
         	/* Esta en la misma red local */
-
+		printf("La direccion estaen mi subred\n");
         	if(ARPrequest(interface,IP_destino,(ipdatos.ETH_destino))==ERROR){
             		printf("Error al hacer ARPrequest\n");
             		return ERROR;
         	}
     	} else {
         	/* Esta en distinta red local, usar gateway */
+		printf("La direccion no esta en mi subred, buscando gateway\n");
         	if(obtenerGateway(interface, gateway)==ERROR){
             		printf("Error al obtener gateway\n");
             		return ERROR;
@@ -378,7 +383,7 @@ uint8_t moduloIP(uint8_t* segmento, uint64_t longitud, uint16_t* pila_protocolos
         for(i=0;i<longitud/fragSize;i++){
             printf("BUCLEEEEEi\n");        
         	if(construirIP(segmento+pos_control, fragSize, pos_control, protocolo_superior, 
-            		IP_origen, IP_destino, protocolo_inferior, pila_protocolos, &ipdatos)==ERROR){
+            		IP_origen, IP_destino, protocolo_inferior, pila_protocolos, &ipdatos,1)==ERROR){
             		printf("Error al construir el paquete IP\n");
             		return ERROR;
         	}
@@ -386,7 +391,7 @@ uint8_t moduloIP(uint8_t* segmento, uint64_t longitud, uint16_t* pila_protocolos
     	}
 
     	if(construirIP(segmento+pos_control, longitud%fragSize, pos_control, protocolo_superior, 
-        IP_origen, IP_destino, protocolo_inferior, pila_protocolos, &ipdatos)==ERROR){
+        IP_origen, IP_destino, protocolo_inferior, pila_protocolos, &ipdatos, 0)==ERROR){
         	printf("Error al construir el paquete IP\n");
         	return ERROR;
     	}
@@ -410,7 +415,7 @@ uint8_t moduloIP(uint8_t* segmento, uint64_t longitud, uint16_t* pila_protocolos
 *****************************************************************************************/
 uint8_t construirIP(uint8_t *segmento, uint32_t longitud, uint32_t pos_control, uint16_t protocolo_superior, 
             uint8_t * IP_origen, uint8_t * IP_destino, uint16_t protocolo_inferior, uint16_t* pila_protocolos,
-            void *parametros){
+            void *parametros, int morefrag){
         uint8_t aux8, checksum[2];
         uint16_t aux16;
         uint32_t pos=0, checksumPos=0;
@@ -438,7 +443,11 @@ uint8_t construirIP(uint8_t *segmento, uint32_t longitud, uint32_t pos_control, 
         pos+=sizeof(uint16_t);
         
 	/*Flags, posicion*/
-        aux16=htons(8192+(pos_control/8)); 
+	if(morefrag==1){
+        	aux16=htons(8192+(pos_control/8)); 
+	} else {
+		aux16=htons((pos_control/8));
+	}
         memcpy(datagrama+pos,&aux16,sizeof(uint16_t));
         pos+=sizeof(uint16_t);
 
